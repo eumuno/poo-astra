@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b846dd92-2d93-4d68-aad4-3a2687f54834" name="Changes" comment="teste da IDE">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;eumuno&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/eumuno/poo-astra.git&quot;,
+    &quot;accountId&quot;: &quot;0dc64019-277f-4552-b783-7774e61d70bf&quot;
+  }
+}</component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.2765298655492119" />
+      <entry key="MS500" value="2.676640477638947" />
+      <entry key="S2" value="4.96413675518165" />
+      <entry key="S5" value="6.038828476338914" />
+      <entry key="S10" value="6.490358378124464" />
+      <entry key="S30" value="6.823238412294981" />
+      <entry key="S60" value="6.953433704313131" />
+      <entry key="M2" value="8.207900678178685" />
+      <entry key="M5" value="18.12653338250904" />
+      <entry key="M10" value="33.159392411897066" />
+      <entry key="M15" value="44.27313080242362" />
+      <entry key="M30" value="64.27156643137906" />
+      <entry key="H1" value="80.78919898067561" />
+      <entry key="H2" value="91.70258208116509" />
+      <entry key="H4" value="98.01803388182448" />
+      <entry key="D1" value="103.78669959513427" />
+      <entry key="W1" value="104.82540930412695" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.013859051708997" />
+      <entry key="MS500" value="2.4903886278348546" />
+      <entry key="S2" value="4.8949678792603" />
+      <entry key="S5" value="6.007949392471813" />
+      <entry key="S10" value="6.474282648426588" />
+      <entry key="S30" value="6.817727047283402" />
+      <entry key="S60" value="6.95064121986923" />
+      <entry key="M2" value="8.206258259307623" />
+      <entry key="M5" value="18.125070548524842" />
+      <entry key="M10" value="33.1579150683781" />
+      <entry key="M15" value="44.271688065127364" />
+      <entry key="M30" value="64.2703702484192" />
+      <entry key="H1" value="80.78838736832598" />
+      <entry key="H2" value="91.70210313623203" />
+      <entry key="H4" value="98.01777289897065" />
+      <entry key="D1" value="103.78665279236205" />
+      <entry key="W1" value="104.82540253257912" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3JCmqne2djSWb0et0o20YkMvAqX" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "devmuno",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.27258.48" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.27258.48" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b846dd92-2d93-4d68-aad4-3a2687f54834" name="Changes" comment="" />
+      <created>1789173618689</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1789173618689</updated>
+      <workItem from="1789173620017" duration="706000" />
+      <workItem from="1789180768584" duration="2631000" />
+    </task>
+    <task id="LOCAL-00001" summary="teste da IDE">
+      <option name="closed" value="true" />
+      <created>1789173797715</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1789173797716</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="teste da IDE" />
+    <option name="LAST_COMMIT_MESSAGE" value="teste da IDE" />
+  </component>
+</project>
