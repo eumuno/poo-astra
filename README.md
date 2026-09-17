@@ -2,7 +2,7 @@
 
 Bem-vindo ao repositório do **Grupo 7** para a disciplina de Programação Orientada a Objetos.
 
-Nosso projeto consiste em...
+Nosso projeto consiste em....
 
 ---
 
