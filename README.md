@@ -31,7 +31,7 @@ A organização física das pastas do repositório segue as recomendações de b
 ```
 poo-astra/
 ├── README.md                   # Esta página inicial do projeto.
-├── EM CONSTRUÇÃO
+├── src/
 │   ├── ...
 │   └── ...
 ├── EM CONSTRUÇÃO
