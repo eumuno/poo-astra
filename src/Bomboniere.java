@@ -1,6 +1,6 @@
 public class Bomboniere {
 
-    private String itens;
+    private String item;
     private int idItem;
 
 }
