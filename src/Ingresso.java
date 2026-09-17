@@ -1,7 +1,7 @@
 public class Ingresso {
 
-    private int disponiveis;
-    private int vendidos;
+    private int disponivel;
+    private int vendido;
     private int id;
 
 }

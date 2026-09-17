@@ -4,6 +4,6 @@ public class Funcionario {
 
     private double salario;
     private String funcao;
-    private LocalTime horarios;
+    private LocalTime horario;
 
 }

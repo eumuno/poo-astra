@@ -1,7 +1,7 @@
 public class Assento {
 
-    private int lugaresReservados;
-    private int disponiveis;
-    private int indisponiveis;
+    private int lugareReservado;
+    private int disponivel;
+    private int indisponivel;
 
 }
