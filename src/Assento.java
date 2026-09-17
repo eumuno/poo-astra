@@ -1,6 +1,6 @@
 public class Assento {
 
-    private int lugareReservado;
+    private int lugarReservado;
     private int disponivel;
     private int indisponivel;
 
