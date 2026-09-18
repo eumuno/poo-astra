@@ -1,6 +1,13 @@
 public class Sala {
 
-    private int numeroDaSala;
-    private int lotacaoMaxima;
+    // ATRIBUTOS
+    private int numero;
+    private int capacidade;
+    private Assento assentos;
+
+    // MÉTODOS
+    public boolean possuiAssento(int numero)
+    public Assento buscarAssento(int numero)
+    public int quantidadeAssentosDisponiveis(...)
 
 }

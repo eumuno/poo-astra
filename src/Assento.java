@@ -1,7 +1,20 @@
 public class Assento {
 
-    private int lugarReservado;
-    private int disponivel;
-    private int indisponivel;
+    // ATRIBUTOS
+    private int numero;
+    private tipoAssento tipo;
+    private boolean ocupado;
+
+    // ENUM
+    public enum tipoAssento {
+        COMUM,
+        PREFERENCIAL
+    }
+
+    // MÉTODOS
+    public void ocupar()
+    public void liberar()
+    public boolean estaDisponivel()
+    public boolean ehPreferencial()
 
 }

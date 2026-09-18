@@ -1,9 +1,17 @@
 public class Filme {
 
-    private String diretor;
-    private boolean isDublado;
-    private String elenco;
-    private String estudioProducao;
-    private int classificacaoIndicativa;
+    // ATRIBUTOS
+    private int id;
+    private String titulo;
+    private String sinopse;
+    private int duracaoMinutos;
+    private String classificacaoIndicativa;
+    private String genero;
+    private boolean ativo;
+
+    // MÉTODOS
+    public String gerarResumo()
+    public void atualizarInformacoes(...)
+    public boolean podeSerExibido()
 
 }
