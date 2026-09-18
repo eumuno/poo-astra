@@ -2,7 +2,7 @@
 
 Bem-vindo ao repositório do **Grupo 7** para a disciplina de Programação Orientada a Objetos.
 
-Nosso projeto consiste em....
+Nosso projeto é o Astra: um sistema de gerenciamento e compra online para um cinema. O cliente pode consultar filmes e sessões disponíveis, selecionar assentos, comprar ingressos e adquirir produtos da bomboniere. O pagamento é realizado pelo sistema e os produtos e ingressos são retirados presencialmente no cinema. Funcionários administradores podem cadastrar e gerenciar filmes, sessões, salas e produtos.
 
 ---
 
@@ -13,14 +13,6 @@ Nosso projeto consiste em....
 * **Gabriela Muniz Barreto** — gabrielamuniz.aluno@unipampa.edu.br — [GitHub](https://github.com/gabrielamnzb)
 * **Isabeli Souza da Rosa** — isabelirosa.aluno@unipampa.edu.br — [GitHub](https://github.com/beliisa2626)
 * **Katiane Gamarra Olegário** — katianeolegario.aluno@unipampa.edu.br — [GitHub](https://github.com/katianeG)
-
----
-
-## Guia de Navegação do Projeto
-
-O projeto está estruturado de forma incremental nas pastas do repositório, facilitando o acompanhamento de cada uma das etapas do código:
-
-EM CONSTRUÇÃO
 
 ---
 
