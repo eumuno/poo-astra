@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Xg9XxNYr4aiX4SvtbYsJB6Uw6ZBmUGeryxd70f9X6uBrhb2FbDT5QAItntG1EKg
+\restrict 0RTTeuAn4q8cfnk1cuVjF8mZS3EVVUHD3Zgx0eGnpe7mOdOCGBRHFMaFMsN1e7c
 
 -- Dumped from database version 14.24 (Homebrew)
 -- Dumped by pg_dump version 14.24 (Homebrew)
@@ -81,5 +81,5 @@ ALTER TABLE ONLY public.filmes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Xg9XxNYr4aiX4SvtbYsJB6Uw6ZBmUGeryxd70f9X6uBrhb2FbDT5QAItntG1EKg
+\unrestrict 0RTTeuAn4q8cfnk1cuVjF8mZS3EVVUHD3Zgx0eGnpe7mOdOCGBRHFMaFMsN1e7c
 
