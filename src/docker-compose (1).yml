@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: astra12345678
+      POSTGRES_DB: astra
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Se tiver um schema.sql, descomente a linha abaixo para rodar automaticamente
+      # na primeira inicialização do container:
+      # - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+volumes:
+  pgdata:
