@@ -2,7 +2,7 @@
 
 Bem-vindo ao repositório do **Grupo 7** para a disciplina de Programação Orientada a Objetos.
 
-Nosso projeto consiste em...
+Nosso projeto consiste em....
 
 ---
 
@@ -31,7 +31,7 @@ A organização física das pastas do repositório segue as recomendações de b
 ```
 poo-astra/
 ├── README.md                   # Esta página inicial do projeto.
-├── EM CONSTRUÇÃO
+├── src/
 │   ├── ...
 │   └── ...
 ├── EM CONSTRUÇÃO
