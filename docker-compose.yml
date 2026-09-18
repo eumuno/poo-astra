@@ -13,7 +13,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       # Se tiver um schema.sql, descomente a linha abaixo para rodar automaticamente
       # na primeira inicialização do container:
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      #- ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
 volumes:
   pgdata:
