@@ -1,11 +1,12 @@
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class reservaIngresso {
 
     // ATRIBUTOS
     private int id;
     private Cliente cliente;
-    private Ingresso ingressos;
+    private List<Ingresso> ingressos;
     private LocalDateTime dataReserva;
     private statusReserva status;
 

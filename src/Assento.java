@@ -17,4 +17,7 @@ public class Assento {
     public boolean estaDisponivel()
     public boolean ehPreferencial()
 
+    // REGRA DE NEGÓCIO SE JÁ ESTIVER OCUPADO
+    private class assentoIndisponivelException extends Exception {
+    }
 }
