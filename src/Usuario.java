@@ -6,8 +6,7 @@ public class Usuario {
     private String email;
     private String senha;
 
-    public String getTipoUsuario() {
-        return null;
-    }
+    // MÉTODOS
+    public String getTipoUsuario()
 
 }
