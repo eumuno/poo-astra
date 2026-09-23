@@ -1,7 +1,9 @@
+package astra.modelo;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class reservaIngresso {
+public class ReservaIngresso {
 
     // ATRIBUTOS
     private int id;

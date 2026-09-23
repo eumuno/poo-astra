@@ -1,3 +1,5 @@
+package astra.modelo;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -6,7 +8,7 @@ public class Pedido {
     // ATRIBUTOS
     private int id;
     private Cliente cliente;
-    private List<itemPedido> itens;
+    private List<ItemPedido> itens;
     private LocalDateTime data;
     private statusPedido status;
 

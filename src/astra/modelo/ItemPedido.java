@@ -1,4 +1,6 @@
-public class itemPedido {
+package astra.modelo;
+
+public class ItemPedido {
 
     // ATRIBUTOS
     private Produto produto;
