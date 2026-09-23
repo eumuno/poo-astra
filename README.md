@@ -23,17 +23,23 @@ A organização física das pastas do repositório segue as recomendações de b
 ```
 poo-astra/
 ├── README.md                   # Esta página inicial do projeto.
-├── src/
-│   ├── ...
-│   └── ...
-├── EM CONSTRUÇÃO
-│   └── ...
-├── EM CONSTRUÇÃO                     
-│   └── ...
-├── EM CONSTRUÇÃO               
-│   └── ...
-└── EM CONSTRUÇÃO                  
+├── docs/                       # Pasta para documentos gerais.
+├── diagramas/                  # Pasta para os diagramas UML.
+└── src/                        # Pasta raiz do código-fonte.
+    └── astra/                  
+        ├── modelo/             # Classes de domínio.
+        ├── servico/            # Regras de negócio e lógicas do sistema.
+        ├── excecoes/           # Classes de erros personalizados do domínio.
+        └── interfacegrafica/   # Telas desenvolvidas em Java Swing.              
 ```
+## Instruções para Executar o Projeto
+(EM CONSTRUÇÃO. Preencheremos esta seção quando tivermos o código rodando.)
+
+## Identificação das Classes Principais
+(EM CONSTRUÇÃO. Preencheremos esta seção conforme criarmos as classes e as desenvolvermos.)
+
+## Explicação Breve das Regras de Negócio
+(EM CONSTRUÇÃO. Descrever aqui as validações e alterações de estado.)
 
 ---
 
