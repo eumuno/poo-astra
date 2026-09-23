@@ -23,4 +23,13 @@ public class Produto {
     public void retirarEstoque(int quantidade)
     public boolean possuiEstoque(int quantidade)
 
+    // Inicializar o preço
+    public Produto(double preco) {
+        this.preco = preco;
+    }
+
+    // Metodo necessário para o ItemPedido ler o valor
+    public double getPreco() {
+        return this.preco;
+    }
 }
