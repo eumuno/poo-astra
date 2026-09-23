@@ -9,7 +9,7 @@ public class Produto {
     private categoriaProduto categoria;
 
     // ENUM
-    public enum CategoriaProduto {
+    public enum categoriaProduto {
         PIPOCA,
         BEBIDA,
         DOCE,
