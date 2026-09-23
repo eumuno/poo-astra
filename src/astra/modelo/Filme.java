@@ -1,3 +1,5 @@
+package astra.modelo;
+
 public class Filme {
 
     // ATRIBUTOS

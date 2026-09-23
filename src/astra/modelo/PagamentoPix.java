@@ -1,4 +1,6 @@
-public class pagamentoPix extends Pagamento {
+package astra.modelo;
+
+public class PagamentoPix extends Pagamento {
 
     @Override
     public void processarPagamento() {

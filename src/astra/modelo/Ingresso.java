@@ -1,3 +1,5 @@
+package astra.modelo;
+
 public class Ingresso {
 
     // ATRIBUTOS
@@ -5,11 +7,11 @@ public class Ingresso {
     private Sessao sessao;
     private Assento assento;
     private Cliente cliente;
-    private StatusIngresso status;
+    private statusIngresso status;
     private double valor;
 
     // ENUM
-    public enum StatusIngresso {
+    public enum statusIngresso {
         RESERVADO,
         PAGO,
         CANCELADO,
