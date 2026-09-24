@@ -7,7 +7,7 @@ public class Administrador extends Usuario {
         super(id, nome, email, senha);
     }
 
-    // SOBRESCRITA DO MÉTODO ABSTRATO
+    // SOBRESCRITA DO METODO ABSTRATO
     @Override
     public String getTipoUsuario() {
         return "Administrador";

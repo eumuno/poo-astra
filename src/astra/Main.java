@@ -6,7 +6,7 @@ import javax.swing.SwingUtilities;
 public class Main {
     public static void main(String[] args) {
 
-        // inicia a GUI d forma segura
+        // inicia a GUI d forma segura!!! AAAA
         SwingUtilities.invokeLater(() -> {
             AstraFrame tela = new AstraFrame(); // cria janela
             tela.setVisible(true); // dx janela visível
