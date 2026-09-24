@@ -11,7 +11,7 @@ public class Cliente extends Usuario {
         this.cpf = cpf;
     }
 
-    // SOBRESCRITA DO MÉTODO ABSTRATO
+    // SOBRESCRITA DO METODO ABSTRATO
     @Override
     public String getTipoUsuario() {
         return "Cliente";

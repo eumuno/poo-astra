@@ -16,15 +16,12 @@ public class Usuario {
         this.senha = senha;
     }
 
-    // MÉTODO ABSTRATO (p sublcasses implementarem)
+    // METODO ABSTRATO (p sublcasses implementarem)
     public abstract String getTipoUsuario();
 
     // GETTERS
     public int getId() {return id;}
     public String getNome() {return nome;}
     public String getEmail() {return email;}
-
-
-
 
 }
