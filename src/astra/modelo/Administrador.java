@@ -13,7 +13,7 @@ public class Administrador extends Usuario {
         return "Administrador";
     }
 
-    // MÉTODOS (a lógica será criada dps)
+    // OUTROS MÉTODOS (a lógica será criada dps)
     // public void cadastrarFilme(...) {...}
     // public void cadastrarSessao(...) {...}
     // public void cadastrarProduto(...) {...}

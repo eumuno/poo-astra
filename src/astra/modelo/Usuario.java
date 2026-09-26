@@ -1,6 +1,6 @@
 package astra.modelo;
 
-public class Usuario {
+public abstract class Usuario {
 
     // ATRIBUTOS
     private int id;
