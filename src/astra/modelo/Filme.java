@@ -10,8 +10,9 @@ public class Filme {
     private classificacaoIndicativa classificacaoIndicativa;
     private String genero;
     private String diretor;
-    private boolean dublado;
     private boolean ativo;
+    private boolean dublado;
+    private String sinopse;
 
     //ENUM
     public enum classificacaoIndicativa{
@@ -32,7 +33,7 @@ public class Filme {
     }
 
     //CONSTRUTOR
-    public Filme(int id, String titulo, int duracaoMinutos, classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado) {
+    public Filme(int id, String titulo, int duracaoMinutos, classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
         this.id = id;
         this.titulo = titulo;
         this.duracaoMinutos = duracaoMinutos;
@@ -40,6 +41,8 @@ public class Filme {
         this.genero = genero;
         this.diretor = diretor;
         this.ativo = ativo;
+        this.dublado = dublado;
+        this.sinopse = sinopse;
     }
 
     // MÉTODOS
@@ -67,12 +70,16 @@ public class Filme {
         return diretor;
     }
 
+    public boolean isAtivo() {
+        return ativo;
+    }
+
     public boolean isDublado() {
         return dublado;
     }
 
-    public boolean isAtivo() {
-        return ativo;
+    public String getSinopse() {
+        return sinopse;
     }
 
     public String gerarResumo(){
@@ -93,10 +100,13 @@ public class Filme {
 
         return "ID: " + id +
         "\nTítulo: " + titulo +
-        "\nDuracao minutos: " + duracaoMinutos +
+        "\nDuracao minutos: " + duracaoMinutos + " minutos" +
         "\nGênero: " + genero +
+        "\nClassificação indicativa: " + classificacaoIndicativa.getDescricao() +
         "\nDiretor: " + diretor +
-        "\nAtivo: " + ativo;
+        "\nDublado: " + textoDublado +
+        "\nAtivo: " + textoAtivo +
+        "\nSinopse: " + sinopse;
     }
 
 }
