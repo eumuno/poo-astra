@@ -18,7 +18,7 @@ public class Cliente extends Usuario {
     }
 
     // OUTROS MÉTODOS (a lógica será criada dps)
-    // public ReservaIngresso criarReserva() {...} classe ReservaIngresso foi apagado pq disseram q n era necessário
+    // public ReservaIngresso criarReserva() {...} classe ReservaIngresso foi apagado pq disseram q n era necessário, tem q ver oq fazer né pqp
     // public Pedido criarPedido() {...}
 
 }
