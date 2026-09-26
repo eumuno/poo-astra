@@ -17,8 +17,6 @@ public class Cliente extends Usuario {
         return "Cliente";
     }
 
-    // OUTROS MÉTODOS (a lógica será criada dps)
-    // public ReservaIngresso criarReserva() {...} classe ReservaIngresso foi apagado pq disseram q n era necessário, tem q ver oq fazer né pqp
-    // public Pedido criarPedido() {...}
+    // OUTROS MÉTODOS DE COMPRAR INGRESSO E FAZER PEDIDO ESTARÃO NO CINEMASERVICE (eu acho)
 
 }
