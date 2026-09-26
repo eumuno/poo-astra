@@ -17,8 +17,6 @@ public class Cliente extends Usuario {
         return "Cliente";
     }
 
-    // MÉTODOS (a lógica será criada dps)
-    // public ReservaIngresso criarReserva() {...}
-    // public Pedido criarPedido() {...}
+    // OUTROS MÉTODOS DE COMPRAR INGRESSO E FAZER PEDIDO ESTARÃO NO CINEMASERVICE (eu acho)
 
 }
