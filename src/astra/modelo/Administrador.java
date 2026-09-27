@@ -13,9 +13,6 @@ public class Administrador extends Usuario {
         return "Administrador";
     }
 
-    // MÉTODOS (a lógica será criada dps)
-    // public void cadastrarFilme(...) {...}
-    // public void cadastrarSessao(...) {...}
-    // public void cadastrarProduto(...) {...}
+    // OUTROS MÉTODOS COMO CADASTRAR FILME, CADASTRAR SESSAO E CADASTRAR PRODUTO ESTARÃO NO CINEMASERVICE (eu acho)
 
 }
