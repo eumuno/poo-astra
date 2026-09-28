@@ -10,6 +10,9 @@ public class Ingresso {
     private statusIngresso status;
     private double valor;
 
+    public Ingresso(Cliente cliente, Sessao sessao, Assento assento) {
+    }
+
     // ENUM
     public enum statusIngresso {
         RESERVADO,
