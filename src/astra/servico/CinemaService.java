@@ -21,12 +21,13 @@ public class CinemaService {
 
     // METODO Q A TELA DO ADMIN CHAMA
     public void cadastrarFilme(Administrador admin, String titulo, String sinopse, int duracao) {
-        // validacao simpls neh
+        // validacao simples
+
         if (titulo == null || titulo.isBlank()) {
             throw new IllegalArgumentException("O título do filme é obrigatório!");
         }
 
-        Filme novoFilme = new Filme(/* botem aki */);
+        Filme novoFilme = new Filme (titulo, sinopse, duracao);
     }
         // Realiza a venda de um produto para o cliente e Baixa o estoque do produto e retorna o valor total da compra.
 

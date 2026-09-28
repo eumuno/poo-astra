@@ -10,6 +10,9 @@ public class Filme {
     private String genero;
     private boolean ativo;
 
+    public Filme(String titulo, String sinopse, int duracao) {
+    }
+
     // MÉTODOS
     public String gerarResumo()
     public void atualizarInformacoes(...)
