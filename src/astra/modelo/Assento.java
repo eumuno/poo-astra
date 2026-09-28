@@ -21,7 +21,6 @@ public class Assento{
     public void liberar(){
         this.ocupado = false;
     }
-     //private boolean ocupado() {//?? precisaria de 2 ocupados?
 
     public boolean estaDisponivel(){
         return !this.ocupado;
