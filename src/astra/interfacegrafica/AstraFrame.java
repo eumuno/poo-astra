@@ -1,9 +1,12 @@
 package astra.interfacegrafica;
 
+import astra.servico.CinemaService;
 import javax.swing.*;
 import java.awt.*;
 
 public class AstraFrame extends JFrame {
+
+    private CinemaService servicoCentral = new CinemaService();
 
     // COMPONENTES DA TELA
     private final JLabel textoBoasVindas = new JLabel("Bem-vindo(a) ao Sistema do Astra", SwingConstants.CENTER);
@@ -35,12 +38,12 @@ public class AstraFrame extends JFrame {
     private void configurarEventos() {
         // evento do botao cliente
         botaoCliente.addActionListener(evento -> {
-            new TelaCliente().setVisible(true); // abre tela do cliente
+            new TelaCliente(servicoCentral).setVisible(true); // abre tela do cliente
         });
 
         // evento do botao admin
         botaoAdmin.addActionListener(evento -> {
-            new TelaAdmin().setVisible(true); // abre tela do admin
+            new TelaAdmin().setVisible(true);
         });
     }
 

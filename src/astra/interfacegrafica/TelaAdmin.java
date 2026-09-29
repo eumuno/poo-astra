@@ -18,7 +18,7 @@ public class TelaAdmin extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE); // fecha só essa janela, não td
 
-        // cria as abas
+        // CRIA AS ABAS
         JTabbedPane abas = new JTabbedPane();
         abas.addTab("Cadastrar Filme", criarPainelFilme());
         abas.addTab("Cadastrar Produto", criarPainelProduto());
