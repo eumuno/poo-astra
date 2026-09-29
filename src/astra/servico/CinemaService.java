@@ -28,7 +28,7 @@ public class CinemaService {
     }
 
     // METODO Q A TELA DO ADMIN CHAMA
-    public void cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
+    public Filme cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
         // validacao simpls neh
         if (titulo == null || titulo.isBlank()) {
             throw new IllegalArgumentException("O título do filme é obrigatório!");
@@ -37,5 +37,7 @@ public class CinemaService {
         // OBJETO PARA CRIAR CADASTRO
         //ARMAZENAMENTO VAI SER CRIADO DEPOIS
         Filme novoFilme = new Filme(1,titulo, duracaoMinutos, classificacaoIndicativa, genero, diretor, ativo, dublado, sinopse);
+
+        return novoFilme;
     }
 }
