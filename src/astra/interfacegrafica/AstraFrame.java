@@ -29,21 +29,18 @@ public class AstraFrame extends JFrame {
         JPanel painelBotoes = new JPanel();
         painelBotoes.add(botaoCliente);
         painelBotoes.add(botaoAdmin);
-
         add(painelBotoes, BorderLayout.CENTER);
     }
 
     private void configurarEventos() {
         // evento do botao cliente
         botaoCliente.addActionListener(evento -> {
-            JOptionPane.showMessageDialog(this, "Abrindo a tela de compra de ingressos...");
-            // ainda em desenvolvimento
+            new TelaCliente().setVisible(true); // abre tela do cliente
         });
 
         // evento do botao admin
         botaoAdmin.addActionListener(evento -> {
-            JOptionPane.showMessageDialog(this, "Abrindo a tela de cadastro de filmes e sessões...");
-            // ainda em desenvolvimento
+            new TelaAdmin().setVisible(true); // abre tela do admin
         });
     }
 
