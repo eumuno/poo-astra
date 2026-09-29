@@ -6,46 +6,28 @@ import java.time.LocalDateTime;
 // Abstrata: só existem Pix ou Cartão, nunca "pagamento genérico"
 public abstract class Pagamento {
 
-    private double valor;
-    private LocalDateTime data;
-    private statusPagamento status;
+    public enum Status { PENDENTE, APROVADO, RECUSADO }
+
+    private final double valor;
+    private final LocalDateTime data = LocalDateTime.now();
+    private Status status = Status.PENDENTE; // todo pagamento começa pendente
 
     public Pagamento(double valor) {
         this.valor = valor;
-        this.data = LocalDateTime.now();
-        this.status = statusPagamento.PENDENTE; // todo pagamento começa pendente
     }
 
-    // Cada subclasse faz do seu jeito
+    // Cada subclasse (Pix, Cartão) processa do seu jeito
     public abstract void processarPagamento() throws PagamentoException;
 
-    // Regra: só dá pra mudar o status se ainda estiver pendente
-    protected void mudarStatus(statusPagamento novoStatus) throws PagamentoException {
-        if (status != statusPagamento.PENDENTE) {
+    // Só dá pra mudar o status se ainda estiver pendente
+    protected void mudarStatus(Status novo) throws PagamentoException {
+        if (status != Status.PENDENTE) {
             throw new PagamentoException("Este pagamento já foi finalizado.");
         }
-        this.status = novoStatus;
+        status = novo;
     }
 
-    public double getValor() {
-        return valor;
-    }
-
-    public LocalDateTime getData() {
-        return data;
-    }
-
-    public statusPagamento getStatus() {
-        return status;
-    }
-
-
-        // Enum: conjunto fechado de valores possíveis para o status do pagamento.
-        public enum statusPagamento {
-            PENDENTE,   // criado, ainda não processado
-            APROVADO,   // pago com sucesso
-            RECUSADO,   // ex.: cartão recusado
-            CANCELADO,  // usuário desistiu
-            EXPIRADO    // ex.: Pix não pago no prazo
-        }
+    public double getValor() { return valor; }
+    public LocalDateTime getData() { return data; }
+    public Status getStatus() { return status; }
 }
