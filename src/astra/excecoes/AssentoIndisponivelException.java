@@ -1,7 +1,7 @@
 package astra.excecoes;
 
 public class AssentoIndisponivelException extends Exception {
-    public AssentoIndisponivelException(String s) {
+    public AssentoIndisponivelException(String mensagem) {
+        super(mensagem);
     }
-    // REGRA DE NEGÓCIO SE O ASSENTO JÁ ESTIVER OCUPADO
 }

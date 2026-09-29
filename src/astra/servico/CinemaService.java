@@ -8,14 +8,13 @@ public class CinemaService {
     // METODO Q A TELA CHAMARA QD CLIENTE CLICAR EM COMPRAR
     public Ingresso venderIngresso(Cliente cliente, Sessao sessao, Assento assento, Ingresso.TipoIngresso tipoIngresso) throws AssentoIndisponivelException {
 
-        //verifica se a sessão está disponível
+        // VERIFICA SE A SESSAO TA DISPONIVEL
         if(!sessao.estaDisponivel()){
             throw new IllegalStateException("A sessão não está disponível para venda!");
         }
 
-        // valida se o assento ta ocupado
+        // VALIDA SE O ASSENTO TA OCUPADO
         if (!assento.estaDisponivel()) {
-            // VERIFICAR QM TA COM ASSENTO: AssentoDisponivelException precisa de um construtor que receba String!!!!!!!
             throw new AssentoIndisponivelException("O assento já está ocupado!");
         }
 
@@ -24,12 +23,12 @@ public class CinemaService {
         // CRIA E RETORNA INGRESSO FINAL
         Ingresso novoIngresso = new Ingresso(1,sessao.getFilme(), sessao, assento, cliente, tipoIngresso);
 
-        return novoIngresso; // se tivesse um bd, salvaríamos aq, mas aí só retornamos o objeto msm
+        return novoIngresso; // SE TIVESSE BD, SALVARÍAMOS AQ, MAS AÍ SÓ RETORNA O OBJETO MSM
     }
 
     // METODO Q A TELA DO ADMIN CHAMA
     public void cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
-        // validacao simpls neh
+        // VALIDA SE TITULO TA EM BRANCO
         if (titulo == null || titulo.isBlank()) {
             throw new IllegalArgumentException("O título do filme é obrigatório!");
         }

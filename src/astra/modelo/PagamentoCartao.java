@@ -22,10 +22,10 @@ public class PagamentoCartao extends Pagamento {
     public void processarPagamento() throws PagamentoException {
         // Regra: cartão vencido é recusado
         if (validade.isBefore(YearMonth.now())) {
-            mudarStatus(StatusPagamento.RECUSADO);
+            mudarStatus(statusPagamento.RECUSADO);
             throw new PagamentoException("Cartão vencido. Use outro cartão.");
         }
-        mudarStatus(StatusPagamento.APROVADO);
+        mudarStatus(statusPagamento.APROVADO);
     }
 
     public String getTitular() {

@@ -41,7 +41,7 @@ public class Assento{
     }
 
     // ENUM
-    public enum TipoAssento {
+    public enum tipoAssento {
         COMUM,
         PREFERENCIAL
     }

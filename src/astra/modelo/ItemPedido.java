@@ -10,7 +10,7 @@ public class ItemPedido {
 
     // Construtor: protege os invariantes para impedir a criacao de objetos inconsistentes
     public ItemPedido(Produto produto, int quantidade) {
-        // Validacao de regras de negocio antes de instanciar o objeto
+        // Validacao de regras de negócio antes de instanciar o objeto
         if (produto == null) {
             throw new IllegalArgumentException("O item deve estar associado a um produto valido.");
         }
@@ -42,4 +42,5 @@ public class ItemPedido {
 
     public double getPrecoUnitario() {
         return this.precoUnitario;
+    }
 }
