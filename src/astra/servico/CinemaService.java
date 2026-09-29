@@ -26,15 +26,20 @@ public class CinemaService {
         return novoIngresso; // SE TIVESSE BD, SALVARÍAMOS AQ, MAS AÍ SÓ RETORNA O OBJETO MSM
     }
 
-    // METODO Q A TELA DO ADMIN CHAMA
+    // METODOS Q A TELA DO ADMIN CHAMA
     public void cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
         // VALIDA SE TITULO TA EM BRANCO
         if (titulo == null || titulo.isBlank()) {
             throw new IllegalArgumentException("O título do filme é obrigatório!");
         }
 
-        // OBJETO PARA CRIAR CADASTRO
-        //ARMAZENAMENTO VAI SER CRIADO DEPOIS
         Filme novoFilme = new Filme(1,titulo, duracaoMinutos, classificacaoIndicativa, genero, diretor, ativo, dublado, sinopse);
+    }
+
+    public void cadastrarProduto(Administrador admin, String nome, String descricao, double preco, int estoque, Produto.CategoriaProduto categoria) {
+        if (nome == null || nome.isBlank()) {
+            throw new IllegalArgumentException("O nome do produto é obrigatório!");
+        }
+        Produto novoProduto = new Produto(1, nome, descricao, preco, estoque, categoria);
     }
 }
