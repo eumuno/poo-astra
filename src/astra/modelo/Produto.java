@@ -90,9 +90,9 @@ public class Produto {
     }
 
     public void setEstoque(int estoque) {
+        if(estoque >= 0)
         this.estoque = estoque;
     }
-
     public CategoriaProduto getCategoria() {
         return categoria;
     }

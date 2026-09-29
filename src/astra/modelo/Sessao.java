@@ -1,6 +1,8 @@
 package astra.modelo;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Sessao {
 
@@ -9,16 +11,15 @@ public class Sessao {
     private Filme filme;
     private Sala sala;
     private LocalDateTime dataHora;
-    private double preco;
     private statusSessao status;
+    private Set<Integer> assentosOcupados = new HashSet<>();
 
     //CONSTRUTOR
-    public Sessao(int id, Filme filme, Sala sala, LocalDateTime dataHora, double preco, statusSessao status) {
+    public Sessao(int id, Filme filme, Sala sala, LocalDateTime dataHora, statusSessao status) {
         this.id = id;
         this.filme = filme;
         this.sala = sala;
         this.dataHora = dataHora;
-        this.preco = preco;
         this.status = status;
     }
 
@@ -34,18 +35,26 @@ public class Sessao {
         return status == statusSessao.AGENDADA;
     }
 
-    public boolean possuiVagas(){
-        //IMPLEMENTAR DEPOIS QUANDO A CLASSE SALA EXISTIR
-        return true;
-    }
+   public boolean possuiVagas(){
+        return assentosOcupados.size() < sala.getAssentos().size();
+   }
+
+   public boolean assentoEstaDisponivel(int numero){
+        return sala.possuiAssento(numero)
+                && !assentosOcupados.contains(numero);
+   }
+
+   public void ocuparAssento(int numero){
+        if(!assentoEstaDisponivel(numero)){
+            throw new IllegalStateException("Assento ocupado ou inexistente na sessão!");
+        }
+        assentosOcupados.add(numero);
+   }
 
     public void cancelar(){
         status = statusSessao.CANCELADA;
     }
 
-    public double calcularPreco(){
-        return preco;
-    }
     //GETTER
     public int getId(){
         return id;
@@ -62,9 +71,6 @@ public class Sessao {
         return dataHora;
     }
 
-    public double getPreco(){
-        return preco;
-    }
 
     public statusSessao getStatus(){
         return status;

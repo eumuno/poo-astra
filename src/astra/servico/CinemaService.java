@@ -13,22 +13,26 @@ public class CinemaService {
             throw new IllegalStateException("A sessão não está disponível para venda!");
         }
 
-        // valida se o assento ta ocupado
-        if (!assento.estaDisponivel()) {
-            // VERIFICAR QM TA COM ASSENTO: AssentoDisponivelException precisa de um construtor que receba String!!!!!!!
-            throw new AssentoIndisponivelException("O assento já está ocupado!");
-        }
+        //VERIFICANDO ASSENTO
+        int numeroAssento = assento.getNumero();
 
-        assento.ocupar(); // EXECUTA A ALTERAÇÃO
+        if(!sessao.assentoEstaDisponivel(numeroAssento)){
+            throw new AssentoIndisponivelException("O assento não existe na sala ou já está ocupado!");
+        }
+        //OCUPA O ASSENTO NESSA SESSÃO
+        sessao.ocuparAssento(numeroAssento);
+
+        //busca assento na sala da sessão
+        Assento assentoDaSala = sessao.getSala().buscarAssento(numeroAssento);
 
         // CRIA E RETORNA INGRESSO FINAL
-        Ingresso novoIngresso = new Ingresso(1,sessao.getFilme(), sessao, assento, cliente, tipoIngresso);
+        Ingresso novoIngresso = new Ingresso(1,sessao.getFilme(), sessao, assentoDaSala, cliente, tipoIngresso);
 
         return novoIngresso; // se tivesse um bd, salvaríamos aq, mas aí só retornamos o objeto msm
     }
 
     // METODO Q A TELA DO ADMIN CHAMA
-    public void cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
+    public Filme cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
         // validacao simpls neh
         if (titulo == null || titulo.isBlank()) {
             throw new IllegalArgumentException("O título do filme é obrigatório!");
@@ -37,5 +41,7 @@ public class CinemaService {
         // OBJETO PARA CRIAR CADASTRO
         //ARMAZENAMENTO VAI SER CRIADO DEPOIS
         Filme novoFilme = new Filme(1,titulo, duracaoMinutos, classificacaoIndicativa, genero, diretor, ativo, dublado, sinopse);
+
+        return novoFilme;
     }
 }
