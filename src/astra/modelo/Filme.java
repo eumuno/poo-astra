@@ -45,9 +45,6 @@ public class Filme {
         this.sinopse = sinopse;
     }
 
-    public Filme(String titulo, String sinopse, int duracao) {
-    }
-
     // MÉTODOS
     public int getId() {
         return id;

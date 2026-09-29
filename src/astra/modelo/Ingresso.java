@@ -22,9 +22,6 @@ public class Ingresso {
         this.tipoIngresso = tipoIngresso;
     }
 
-    public Ingresso(Cliente cliente, Sessao sessao, Assento assento) {
-    }
-
     // ENUM
     public enum TipoIngresso {
         INTEIRA,
