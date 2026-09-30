@@ -17,6 +17,6 @@ public class Cliente extends Usuario {
         return "Cliente";
     }
 
-    // OUTROS MÉTODOS DE COMPRAR INGRESSO E FAZER PEDIDO ESTARÃO NO CINEMASERVICE (eu acho)
+    // OUTROS MÉTODOS DE COMPRAR INGRESSO E FAZER PEDIDO ESTARÃO NO CINEMASERVICE
 
 }

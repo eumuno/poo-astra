@@ -100,4 +100,11 @@ public class Produto {
     public void setCategoria(CategoriaProduto categoria) {
         this.categoria = categoria;
     }
+
+    @Override
+    public String toString() {
+        // P EXIBIR O NOME E O PREÇO NA INTERFACE GRÁFICA
+        return nome + " - R$ " + preco;
+    }
+
 }
