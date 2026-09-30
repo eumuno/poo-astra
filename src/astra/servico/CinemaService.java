@@ -56,6 +56,10 @@ public class CinemaService {
         return produtos;
     }
 
+    public List<Filme> getFilmesDisponiveis() {
+        return filmes;
+    }
+
     public Filme getFilmeEmCartaz() {
         return filmes.get(0);
     }
@@ -72,33 +76,17 @@ public class CinemaService {
             throw new IllegalStateException("A sessão não está disponível para venda!");
         }
 
-        // VALIDA SE O ASSENTO TA OCUPADO
-        if (!assento.estaDisponivel()) {
-            throw new AssentoIndisponivelException("O assento já está ocupado!");
-        }
-
         int numeroAssento = assento.getNumero();
-        assento.ocupar();
 
-        Assento assentoFinal = assento;
-
-        // CHECA SE SESSÃO TEM SALA
-        if (sessao.getSala() != null) {
-            try {
-                sessao.ocuparAssento(numeroAssento);
-                Assento assentoDaSala = sessao.getSala().buscarAssento(numeroAssento);
-                if (assentoDaSala != null) {
-                    assentoFinal = assentoDaSala;
-                }
-            } catch (Exception e) {
-                // PEGA ERRO SEM INTERROMPER O FLUXO DA TELA
-                System.err.println("Aviso interno: Falha ao sincronizar assento com a sala - " + e.getMessage());
-            }
+        // VALIDA SE O ASSENTO TA OCUPADO
+        if(!sessao.assentoEstaDisponivel(numeroAssento)){
+            throw new AssentoIndisponivelException("O assento " + numeroAssento + " não existe na sala ou já está ocupado!");
         }
 
-        // CRIA E RETORNA INGRESSO FINAL
-        Ingresso novoIngresso = new Ingresso(1, sessao.getFilme(), sessao, assentoFinal, cliente, tipoIngresso);
+        // OCUPA ASSENTO NA MEMÓRIA DA SESSÃO
+        sessao.ocuparAssento(numeroAssento);
+        Assento assentoDaSala = sessao.getSala().buscarAssento(numeroAssento);
 
-        return novoIngresso;
+        return new Ingresso(1, sessao.getFilme(), sessao, assentoDaSala, cliente, tipoIngresso);
     }
 }

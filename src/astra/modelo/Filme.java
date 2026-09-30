@@ -109,4 +109,9 @@ public class Filme {
         "\nSinopse: " + sinopse;
     }
 
+    @Override
+    public String toString() {
+        return titulo + " (" + duracaoMinutos + " min)";
+    }
+
 }

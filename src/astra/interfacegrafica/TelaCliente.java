@@ -36,16 +36,26 @@ public class TelaCliente extends JFrame {
 
     // ABA INGRESSO
     private JPanel criarPainelIngresso() {
-        JPanel painel = new JPanel(new GridLayout(6, 1, 5, 5));
+        JPanel painel = new JPanel(new GridLayout(9, 1, 5, 5)); // Aumentado para caber o novo campo
         painel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // PUXA O AUTO DA COMPADECIDA
-        painel.add(new JLabel("Filme em Cartaz: " + servico.getFilmeEmCartaz().getTitulo()));
-        painel.add(new JLabel("Digite o número do assento desejado:"));
+        painel.add(new JLabel("Selecione o Filme:"));
 
+        // CAIXA Q PUXA FILMES CADASTRADOS PELO ADMIN
+        JComboBox<Filme> comboFilmes = new JComboBox<>();
+        for (Filme f : servico.getFilmesDisponiveis()) {
+            comboFilmes.addItem(f);
+        }
+        painel.add(comboFilmes);
+
+        // P SELECIONAR TIPO DE INGRESSO
+        painel.add(new JLabel("Tipo de Ingresso:"));
+        JComboBox<Ingresso.TipoIngresso> comboTipo = new JComboBox<>(Ingresso.TipoIngresso.values());
+        painel.add(comboTipo);
+
+        painel.add(new JLabel("Digite o número do assento desejado (1 a 10):"));
         JTextField campoAssento = new JTextField();
         painel.add(campoAssento);
-        painel.add(new JLabel("(Assento 5 forçará erro de indisponibilidade)"));
 
         JButton botaoComprar = new JButton("Adicionar Ingresso ao Pedido");
         painel.add(botaoComprar);
@@ -53,23 +63,23 @@ public class TelaCliente extends JFrame {
         botaoComprar.addActionListener(e -> {
             try {
                 int numAssento = Integer.parseInt(campoAssento.getText());
-
-                // CRIA O ASSENTO NA TELA
+                // CRIA ASSENTO TEMPORÁRIO SÓ P TRANSFORMAR O NÚMERO Q O USUÁRIO DIGITOU
                 Assento assentoEscolhido = new Assento(numAssento, Assento.tipoAssento.COMUM);
-                if (numAssento == 5) {
-                    assentoEscolhido.ocupar(); // simula assento ocupado
-                }
 
-                // CHAMA O SERVIÇO C OS 4 ARGUMENTOS Q ELE PEDE
-                Ingresso ingressoComprado = servico.venderIngresso(clienteAtual, servico.getSessaoTeste(), assentoEscolhido, Ingresso.TipoIngresso.INTEIRA);
+                // PEGA O TIPO Q O CLIENTE ESCOLHEU
+                Ingresso.TipoIngresso tipoSelecionado = (Ingresso.TipoIngresso) comboTipo.getSelectedItem();
 
-                // ADICIONA NO PEDIDO
+                // PASSA O TIPO P SERVIÇO
+                Ingresso ingressoComprado = servico.venderIngresso(clienteAtual, servico.getSessaoTeste(), assentoEscolhido, tipoSelecionado);
+
                 pedidoAtual.adicionarIngresso(ingressoComprado);
-
-                JOptionPane.showMessageDialog(this, "Ingresso adicionado ao carrinho!");
+                JOptionPane.showMessageDialog(this, "Ingresso (" + tipoSelecionado + ") para o assento " + numAssento + " adicionado!");
 
             } catch (AssentoIndisponivelException ex) {
+                // SE TENTAR COMPRAR MSM ASSENTO DNV, APARECE NA TELA
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Assento Ocupado", JOptionPane.WARNING_MESSAGE);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Digite um número válido para o assento.");
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
             }
