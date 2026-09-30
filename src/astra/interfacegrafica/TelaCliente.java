@@ -141,42 +141,38 @@ public class TelaCliente extends JFrame {
 
         // PAGAMENTO PIX (polimorfismo)
         botaoPix.addActionListener(e -> {
-            try {
-                double total = pedidoAtual.calcularTotal();
-                if (total == 0) throw new IllegalStateException("O carrinho está vazio!");
-
-                // usa a classe do pagamento c pix c dados fictícios
-                PagamentoPix pix = new PagamentoPix(total, "pagamentos@astra.com.br"); // chave pix do cinema
-                pix.processarPagamento(); // processa do jeito do pix
-
-                pedidoAtual.confirmarPagamento(); // muda status p pago
-                JOptionPane.showMessageDialog(this, "Pagamento via Pix aprovado! Pedido finalizado.");
-                dispose(); // fecha a tela
-
-            } catch (PagamentoException | IllegalStateException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro no Pagamento", JOptionPane.ERROR_MESSAGE);
+            double total = pedidoAtual.calcularTotal();
+            if (total == 0) {
+                JOptionPane.showMessageDialog(this, "O carrinho está vazio!", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            processarPagamentoPolimorfico(new PagamentoPix(total, "pagamentos@astra.com.br"));
         });
 
         // PAGAMENTO CARTÃO (polimorfismo)
         botaoCartao.addActionListener(e -> {
-            try {
-                double total = pedidoAtual.calcularTotal();
-                if (total == 0) throw new IllegalStateException("O carrinho está vazio!");
-
-                // usa dados do pagamento c cartão com dados fictícios
-                PagamentoCartao cartao = new PagamentoCartao(total, clienteAtual.getNome(), "1234567890123456", YearMonth.now().plusYears(1));
-                cartao.processarPagamento(); // Processa do jeito do Cartão
-
-                pedidoAtual.confirmarPagamento(); // Muda status do pedido para PAGO
-                JOptionPane.showMessageDialog(this, "Pagamento via Cartão aprovado! Pedido finalizado.");
-                dispose(); // Fecha a tela
-
-            } catch (PagamentoException | IllegalStateException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro no Pagamento", JOptionPane.ERROR_MESSAGE);
+            double total = pedidoAtual.calcularTotal();
+            if (total == 0) {
+                JOptionPane.showMessageDialog(this, "O carrinho está vazio!", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            processarPagamentoPolimorfico(new PagamentoCartao(total, clienteAtual.getNome(), "1234567890123456", YearMonth.now().plusYears(1)));
         });
 
         return painel;
     }
+
+    // PROCESSA O PAGAMENTO P SABER SE FOI OU NÃO
+    private void processarPagamentoPolimorfico(Pagamento pagamento) {
+        try {
+            // POLIMORFISMO PURO: A tela não sabe se é Pix ou Cartão, ela só manda processar!
+            pagamento.processarPagamento();
+            pedidoAtual.confirmarPagamento();
+            JOptionPane.showMessageDialog(this, "Pagamento aprovado! Pedido finalizado.");
+            dispose();
+        } catch (PagamentoException | IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro no Pagamento", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
 }
