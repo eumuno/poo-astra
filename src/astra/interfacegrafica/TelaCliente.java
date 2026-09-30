@@ -50,7 +50,7 @@ public class TelaCliente extends JFrame {
 
         // P SELECIONAR TIPO DE INGRESSO
         painel.add(new JLabel("Tipo de Ingresso:"));
-        JComboBox<Ingresso.TipoIngresso> comboTipo = new JComboBox<>(Ingresso.TipoIngresso.values());
+        JComboBox<Ingresso.TipoIngresso> comboTipo = new JComboBox<>(new Ingresso.TipoIngresso[]{Ingresso.TipoIngresso.INTEIRA, Ingresso.TipoIngresso.MEIA});
         painel.add(comboTipo);
 
         painel.add(new JLabel("Digite o número do assento desejado (1 a 10):"));
@@ -88,7 +88,7 @@ public class TelaCliente extends JFrame {
         return painel;
     }
 
-    // ABA PROUTO
+    // ABA PRODUTO
     private JPanel criarPainelProduto() {
         JPanel painel = new JPanel(new GridLayout(4, 1, 5, 5));
         painel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
