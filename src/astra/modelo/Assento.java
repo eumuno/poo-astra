@@ -4,11 +4,11 @@ public class Assento{
 
     // ATRIBUTOS
     private int numero;
-    private TipoAssento tipo;
+    private tipoAssento tipo;
     private boolean ocupado;
 
     // Construtor
-    public Assento(int numero,TipoAssento tipo){
+    public Assento(int numero,tipoAssento tipo){
         this.numero = numero;
         this.tipo = tipo;
         this.ocupado = false;
@@ -26,14 +26,14 @@ public class Assento{
         return !this.ocupado;
     }
     public boolean ehPreferencial(){
-        return this.tipo == TipoAssento.PREFERENCIAL;
+        return this.tipo == tipoAssento.PREFERENCIAL;
     }
 
-    //Getter
+    // GETTER
     public int getNumero(){
         return numero;
     }
-    public TipoAssento getTipo() {
+    public tipoAssento getTipo() {
         return tipo;
     }
     public boolean isOcupado() {

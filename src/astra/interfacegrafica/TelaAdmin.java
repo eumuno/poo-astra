@@ -12,7 +12,7 @@ public class TelaAdmin extends JFrame {
 
     private CinemaService servico = new CinemaService();
 
-    public TelaAdmin() {
+    public TelaAdmin(CinemaService servicoCentral) {
         setTitle("Área do Administrador - Sistema Astra");
         setSize(500, 450);
         setLocationRelativeTo(null);

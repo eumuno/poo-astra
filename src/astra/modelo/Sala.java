@@ -9,7 +9,6 @@ public class Sala {
     private List<Assento> assentos;
 
     //CONSTRUTOR
-
     public Sala(int numero, List<Assento> assentos) {
         this.numero = numero;
         this.assentos = assentos;

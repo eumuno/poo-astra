@@ -19,9 +19,16 @@ public class CinemaService {
         filmes.add(filmeCompadecida);
         produtos.add(new Produto(1, "Pipoca Grande", "Salgada", 25.0, 50, Produto.CategoriaProduto.PIPOCA));
 
-        // CRIA UMA SALA C 5 ASSENTOS P TESTE E UMA SESSÃO
-        Sala sala1 = new Sala(); // Nota: construtor ainda vazio, adaptar dps
-        sessaoUnicaParaTeste = new Sessao(1, filmeCompadecida, sala1, LocalDateTime.now().plusDays(1), 15.0, Sessao.statusSessao.AGENDADA);
+        // CRIA LISTA D ASSENTOS REAIS P SALA D TESTE
+        List<Assento> assentosDaSala = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            assentosDaSala.add(new Assento(i, Assento.tipoAssento.COMUM));
+        }
+
+        // CRIA A SALA C NOVO CONSTRUTOR
+        Sala sala1 = new Sala(1, assentosDaSala);
+
+        sessaoUnicaParaTeste = new Sessao(1, filmeCompadecida, sala1, LocalDateTime.now().plusDays(1), Sessao.statusSessao.AGENDADA);
     }
 
     // METODOS Q A TELA DO ADMIN CHAMA
@@ -75,7 +82,7 @@ public class CinemaService {
 
         Assento assentoFinal = assento;
 
-        //
+        // CHECA SE SESSÃO TEM SALA
         if (sessao.getSala() != null) {
             try {
                 sessao.ocuparAssento(numeroAssento);
@@ -84,8 +91,8 @@ public class CinemaService {
                     assentoFinal = assentoDaSala;
                 }
             } catch (Exception e) {
-                // Rede de segurança: Se os métodos da Sala dela ainda não estiverem instanciando as listas direito,
-                // nós silenciamos o erro interno para a sua interface gráfica não quebrar (Fallback).
+                // PEGA ERRO SEM INTERROMPER O FLUXO DA TELA
+                System.err.println("Aviso interno: Falha ao sincronizar assento com a sala - " + e.getMessage());
             }
         }
 

@@ -43,7 +43,7 @@ public class AstraFrame extends JFrame {
 
         // evento do botao admin
         botaoAdmin.addActionListener(evento -> {
-            new TelaAdmin().setVisible(true);
+            new TelaAdmin(servicoCentral).setVisible(true);
         });
     }
 
