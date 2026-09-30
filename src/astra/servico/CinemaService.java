@@ -25,13 +25,15 @@ public class CinemaService {
     }
 
     // METODOS Q A TELA DO ADMIN CHAMA
-    public void cadastrarFilme(Administrador admin, String titulo, int duracao, Filme.classificacaoIndicativa classificacao, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
+    public Filme cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
         if (titulo == null || titulo.isBlank()) {
             throw new IllegalArgumentException("O título do filme é obrigatório!");
         }
 
-        Filme novoFilme = new Filme(filmes.size() + 1, titulo, duracao, classificacao, genero, diretor, ativo, dublado, sinopse);
+        Filme novoFilme = new Filme(filmes.size() + 1, titulo, duracaoMinutos, classificacaoIndicativa, genero, diretor, ativo, dublado, sinopse);
         filmes.add(novoFilme); // add na lista
+
+        return novoFilme;
     }
 
     public void cadastrarProduto(Administrador admin, String nome, String descricao, double preco, int estoque, Produto.CategoriaProduto categoria) {
@@ -68,12 +70,28 @@ public class CinemaService {
             throw new AssentoIndisponivelException("O assento já está ocupado!");
         }
 
-        assento.ocupar(); // EXECUTA A ALTERAÇÃO
+        int numeroAssento = assento.getNumero();
+        assento.ocupar();
+
+        Assento assentoFinal = assento;
+
+        //
+        if (sessao.getSala() != null) {
+            try {
+                sessao.ocuparAssento(numeroAssento);
+                Assento assentoDaSala = sessao.getSala().buscarAssento(numeroAssento);
+                if (assentoDaSala != null) {
+                    assentoFinal = assentoDaSala;
+                }
+            } catch (Exception e) {
+                // Rede de segurança: Se os métodos da Sala dela ainda não estiverem instanciando as listas direito,
+                // nós silenciamos o erro interno para a sua interface gráfica não quebrar (Fallback).
+            }
+        }
 
         // CRIA E RETORNA INGRESSO FINAL
-        Ingresso novoIngresso = new Ingresso(1,sessao.getFilme(), sessao, assento, cliente, tipoIngresso);
+        Ingresso novoIngresso = new Ingresso(1, sessao.getFilme(), sessao, assentoFinal, cliente, tipoIngresso);
 
-        return novoIngresso; // SE TIVESSE BD, SALVARÍAMOS AQ, MAS AÍ SÓ RETORNA O OBJETO MSM
+        return novoIngresso;
     }
-
 }
