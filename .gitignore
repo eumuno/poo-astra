@@ -6,3 +6,8 @@
 out/
 target/
 *.class
+
+# Banco de dados local (gerado ao executar)
+astra.db
+*.db-journal
+.DS_Store

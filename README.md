@@ -25,11 +25,14 @@ poo-astra/
 ├── README.md                   # Esta página inicial do projeto.
 ├── docs/                       # Pasta para documentos gerais.
 ├── diagramas/                  # Pasta para os diagramas UML.
+├── lib/                        # Bibliotecas externas (driver JDBC do SQLite).
 └── src/                        # Pasta raiz do código-fonte.
     └── astra/                  
         ├── modelo/             # Classes de domínio.
         ├── servico/            # Regras de negócio e lógicas do sistema.
         ├── excecoes/           # Classes de erros personalizados do domínio.
+        ├── persistencia/       # Acesso ao banco de dados (ConexaoBanco).
+        │   └── sql/            # schema.sql (tabelas) e seed.sql (dados iniciais).
         └── interfacegrafica/   # Telas desenvolvidas em Java Swing.              
 ```
 ## Instruções para Executar o Projeto
@@ -38,8 +41,44 @@ Para testar o sistema Astra localmente, siga os passos abaixo:
 1. Faça o clone deste repositório em sua máquina.
 2. Tenha o **JDK 11 ou superior** instalado.
 3. Abra o projeto em sua IDE de preferência (IntelliJ IDEA, Eclipse ou NetBeans), marcando a pasta `src` como raiz do código-fonte.
-4. Execute a classe `astra.Main` (arquivo `src/astra/Main.java`).
-5. A tela inicial (`AstraFrame`) será aberta. Você pode navegar entre a Área do Administrador (para cadastrar Filmes e Produtos) e a Área do Cliente (para simular uma compra completa de ingressos e produtos da bomboniere, finalizando no pagamento).
+4. Adicione o driver do banco ao projeto: o arquivo `lib/sqlite-jdbc-3.46.1.3.jar` já está no repositório.
+   * **IntelliJ:** *File → Project Structure → Libraries → + → Java* e selecione o `.jar` da pasta `lib/` (ou clique com o botão direito no `.jar` → *Add as Library*).
+   * **Eclipse:** botão direito no projeto → *Build Path → Add External Archives* → selecione o `.jar`.
+   * **NetBeans:** *Libraries → Add JAR/Folder* → selecione o `.jar`.
+5. Execute a classe `astra.Main` (arquivo `src/astra/Main.java`) com a **raiz do projeto como diretório de trabalho** (padrão do IntelliJ).
+6. Na primeira execução é criado o arquivo `astra.db` na raiz do projeto, com as tabelas e os dados iniciais. Nas próximas, os dados existentes são mantidos. Para recomeçar do zero, feche o programa e apague o `astra.db`.
+7. A tela inicial (`AstraFrame`) será aberta. Você pode navegar entre a Área do Administrador (para cadastrar Filmes e Produtos) e a Área do Cliente (para simular uma compra completa de ingressos e produtos da bomboniere, finalizando no pagamento).
+
+**Pela linha de comando** (na raiz do projeto; no Windows troque `:` por `;` no classpath):
+
+```bash
+javac -encoding UTF-8 -d out $(find src -name "*.java")
+```
+
+```bash
+java -cp "out:lib/sqlite-jdbc-3.46.1.3.jar" astra.Main
+```
+
+Se o driver não estiver no classpath, o sistema mostra a mensagem "Não foi possível conectar ao banco de dados" e não abre.
+
+## Banco de Dados
+
+Usamos **SQLite** via JDBC: o banco é um único arquivo (`astra.db`), sem precisar instalar servidor.
+
+* **`ConexaoBanco`** (`astra.persistencia`): ponto único de acesso ao banco. `abrirConexao()` devolve uma `Connection` com as chaves estrangeiras ligadas (`PRAGMA foreign_keys = ON`); `inicializar()` executa o `schema.sql` e, se o banco estiver vazio, o `seed.sql`, tudo em uma transação. A URL pode ser trocada com `-Dastra.banco.url=jdbc:sqlite:outro.db`.
+* **`schema.sql`**: cria as tabelas `usuario`, `filme`, `sala`, `assento`, `sessao`, `produto`, `pedido`, `item_pedido`, `ingresso` e `pagamento`. Os ids são gerados pelo banco (`AUTOINCREMENT`), os enums são gravados como texto (`name()`) com `CHECK` para aceitar só valores válidos, e as datas em ISO-8601 (`LocalDateTime.toString()`).
+* **`seed.sql`**: dados iniciais (o filme, o produto, a sala com 10 assentos e a sessão que antes ficavam no construtor do `CinemaService`, além de um administrador e um cliente).
+* **`PersistenciaException`** (`astra.excecoes`): embrulha a `SQLException`, para que serviços e telas tratem erros de banco como as demais exceções do sistema.
+* **`CriptografiaSenha`** (`astra.persistencia`): as senhas são gravadas como hash SHA-256, nunca em texto puro.
+
+Regras garantidas pelo próprio banco:
+* `UNIQUE(sessao_id, assento_id)` em `ingresso`: o mesmo assento não pode ser vendido duas vezes na mesma sessão.
+* `CHECK (estoque >= 0)` em `produto`: o estoque nunca fica negativo.
+* Chaves estrangeiras: não é possível, por exemplo, criar um pedido para um cliente que não existe.
+
+Usuários iniciais (senha `123` para ambos): `admin@astra` (administrador) e `cliente@email.com` (cliente).
+
+> **Estado atual:** a estrutura do banco está pronta e é criada ao abrir o sistema. Os repositórios que vão ler e gravar filmes, produtos, sessões e pedidos nessas tabelas ainda estão em desenvolvimento; até lá, as telas continuam usando os dados em memória do `CinemaService`.
 
 ## Identificação das Classes Principais
 
