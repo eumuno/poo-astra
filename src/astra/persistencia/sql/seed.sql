@@ -38,3 +38,10 @@ INSERT INTO sessao (filme_id, sala_id, data_hora, status, preco_base)
 SELECT f.id, s.id, strftime('%Y-%m-%dT19:00', 'now', 'localtime', '+1 day'), 'AGENDADA', 15.0
 FROM filme f, sala s
 WHERE f.titulo = 'O Auto da Compadecida' AND s.numero = 1;
+
+-- Filmes adicionais
+INSERT INTO filme (titulo, duracao_minutos, classificacao, genero, diretor, ativo, dublado, sinopse) VALUES
+    ('Central do Brasil', 113, 'DOZE', 'Drama', 'Walter Salles', 1, 0,
+     'Dora, uma ex-professora que escreve cartas para analfabetos, ajuda um menino a procurar o pai no Nordeste.'),
+    ('Cidade de Deus', 130, 'DEZESSEIS', 'Drama/Crime', 'Fernando Meirelles', 1, 0,
+     'Buscapé, um jovem fotógrafo, acompanha o crescimento do crime organizado na Cidade de Deus, no Rio de Janeiro.');
