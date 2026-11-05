@@ -78,6 +78,46 @@ Regras garantidas pelo próprio banco:
 
 Usuários iniciais (senha `123` para ambos): `admin@astra` (administrador) e `cliente@email.com` (cliente).
 
+### Como usar o banco
+
+**Onde fica:** o arquivo `astra.db` é criado na pasta de onde o programa é executado (no IntelliJ, a raiz do projeto). Ele está no `.gitignore`, então cada integrante tem o seu próprio banco local.
+
+**Quando o `seed.sql` roda:** só na primeira execução, quando a tabela `usuario` ainda está vazia. Nas execuções seguintes o seed é ignorado, para não duplicar dados.
+
+> ⚠️ Se você **alterar o `seed.sql`** (por exemplo, adicionar um filme), a mudança **não** entra em um `astra.db` que já existe. Para aplicar:
+> 1. Feche o programa.
+> 2. Apague o `astra.db` da raiz do projeto (`rm astra.db` no macOS/Linux, `del astra.db` no Windows).
+> 3. Execute o `astra.Main` de novo. O banco é recriado com o schema e o seed atualizados.
+>
+> Isso apaga tudo o que foi gravado no banco local.
+
+**Quando o `schema.sql` roda:** a cada execução, mas com `CREATE TABLE IF NOT EXISTS`. Uma tabela nova é criada normalmente. Já uma **mudança em tabela existente** (coluna nova, `CHECK` diferente) só vale depois de apagar o `astra.db`, como acima.
+
+**Como ver os dados:**
+* **Linha de comando** (o `sqlite3` já vem no macOS e na maioria das distribuições Linux):
+  ```bash
+  sqlite3 astra.db
+  sqlite> .tables
+  sqlite> .headers on
+  sqlite> .mode column
+  sqlite> SELECT * FROM filme;
+  sqlite> .quit
+  ```
+* **IntelliJ:** abra a aba *Database → + → Data Source → SQLite*, aponte para o arquivo `astra.db` da raiz do projeto e, se o IntelliJ pedir, baixe o driver. Depois de rodar o programa, use *Refresh* para ver os dados atualizados.
+* **Outra opção gráfica:** [DB Browser for SQLite](https://sqlitebrowser.org/).
+
+**Usar outro arquivo de banco** (por exemplo, para testes sem mexer no seu `astra.db`): adicione `-Dastra.banco.url=jdbc:sqlite:teste.db` às *VM options* da configuração de execução no IntelliJ, ou rode pela linha de comando:
+
+```bash
+java -Dastra.banco.url=jdbc:sqlite:teste.db -cp "out:lib/sqlite-jdbc-3.46.1.3.jar" astra.Main
+```
+
+**Problemas comuns:**
+* *"Não foi possível conectar ao banco de dados"*: o `lib/sqlite-jdbc-3.46.1.3.jar` não está no classpath (veja o passo 4 das instruções de execução).
+* *"Script sql/schema.sql não encontrado"*: o programa não foi executado a partir da raiz do projeto. Ajuste o *Working directory* da configuração de execução para a pasta `poo-astra`.
+* *Mudei o seed e nada aconteceu*: apague o `astra.db` (veja o aviso acima).
+* *Os dados novos estão no banco mas não aparecem nas telas*: ainda é esperado. Veja o estado atual abaixo.
+
 > **Estado atual:** a estrutura do banco está pronta e é criada ao abrir o sistema. Os repositórios que vão ler e gravar filmes, produtos, sessões e pedidos nessas tabelas ainda estão em desenvolvimento; até lá, as telas continuam usando os dados em memória do `CinemaService`.
 
 ## Identificação das Classes Principais
