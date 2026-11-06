@@ -2,7 +2,7 @@
 
 Bem-vindo ao repositório do **Grupo 7** para a disciplina de Programação Orientada a Objetos.
 
-Nosso projeto é o Astra: um sistema de gerenciamento e compra online para um cinema. O cliente pode consultar filmes e sessões disponíveis, selecionar assentos, comprar ingressos e adquirir produtos da bomboniere. O pagamento é realizado pelo sistema e os produtos e ingressos são retirados presencialmente no cinema. Funcionários administradores podem cadastrar filmes e produtos da bomboniere. Nesta versão, a sala e a sessão de exibição são pré-cadastradas no `CinemaService` para a demonstração.
+Nosso projeto é o Astra: um sistema de gerenciamento e compra online para um cinema. O cliente pode consultar filmes e sessões disponíveis, selecionar assentos, comprar ingressos e adquirir produtos da bomboniere. O pagamento é realizado pelo sistema e os produtos e ingressos são retirados presencialmente no cinema. Funcionários administradores podem cadastrar filmes e produtos da bomboniere. Nesta versão, a sala e a sessão de exibição são pré-cadastradas no `CinemaService` para a demonstração!
 
 ---
 
