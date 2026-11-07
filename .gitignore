@@ -11,3 +11,6 @@ target/
 astra.db
 *.db-journal
 .DS_Store
+
+# Documentação local da equipe (não enviar para o Git)
+docs-interno/
