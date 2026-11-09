@@ -1,7 +1,10 @@
 package astra.servico;
 import astra.excecoes.AssentoIndisponivelException;
 import astra.excecoes.PagamentoException;
+import astra.excecoes.PersistenciaException;
 import astra.modelo.*;
+import astra.persistencia.IngressoRepositorio;
+import astra.persistencia.PedidoRepositorio;
 import astra.servico.pagamento.FormaPagamento;
 import java.util.List;
 
@@ -11,13 +14,21 @@ import java.util.List;
 public class VendaService {
 
     private final List<FormaPagamento> formasPagamento;
+    private final PedidoRepositorio pedidoRepositorio;     //interface: grava a venda
+    private final IngressoRepositorio ingressoRepositorio; //interface: consulta assentos vendidos
 
     //Chegam prontas pelo construtor
-    public VendaService(List<FormaPagamento> formasPagamento) {
+    public VendaService(List<FormaPagamento> formasPagamento, PedidoRepositorio pedidoRepositorio,
+                        IngressoRepositorio ingressoRepositorio) {
         if (formasPagamento == null || formasPagamento.isEmpty()) {
             throw new IllegalArgumentException("Informe pelo menos uma forma de pagamento.");
         }
+        if (pedidoRepositorio == null || ingressoRepositorio == null) {
+            throw new IllegalArgumentException("Os repositórios de pedido e de ingresso são obrigatórios.");
+        }
         this.formasPagamento = List.copyOf(formasPagamento);
+        this.pedidoRepositorio = pedidoRepositorio;
+        this.ingressoRepositorio = ingressoRepositorio;
     }
 
     public Pedido iniciarPedido(Cliente cliente) {
@@ -53,12 +64,27 @@ public class VendaService {
     public List<FormaPagamento> getFormasPagamento() {
         return formasPagamento;
     }
+
     //Cria o pagemento pela forma escolhida, processa e confirma o pedido, usa o tipo geral Pagamento
-    public Pagamento finalizarPedido(Pedido pedido, FormaPagamento forma) throws PagamentoException {
+    //Só depois do pagamento aprovado a venda (pedido + itens + ingressos + pagamento) é gravada no banco
+    public Pagamento finalizarPedido(Pedido pedido, FormaPagamento forma)
+            throws PagamentoException, AssentoIndisponivelException, PersistenciaException {
         pedido.validarPodeSerPago();
+        conferirAssentosNoBanco(pedido); //antes de cobrar: outra janela pode ter vendido o assento
         Pagamento pagamento = forma.criarPagamento(pedido.calcularTotal(), pedido.getCliente());
         pagamento.processarPagamento();
         pedido.confirmarPagamento();
+        pedidoRepositorio.salvar(pedido, pagamento); //transação: grava tudo ou nada
         return pagamento;
+    }
+
+    //Pergunta ao banco (fonte da verdade) se algum assento do pedido já foi vendido
+    private void conferirAssentosNoBanco(Pedido pedido) throws AssentoIndisponivelException, PersistenciaException {
+        for (Ingresso ingresso : pedido.getIngressos()) {
+            int numero = ingresso.getAssento().getNumero();
+            if (ingressoRepositorio.assentoEstaOcupado(ingresso.getSessao().getId(), numero)) {
+                throw new AssentoIndisponivelException("O assento " + numero + " já foi vendido para esta sessão.");
+            }
+        }
     }
 }
