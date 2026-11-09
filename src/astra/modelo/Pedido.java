@@ -89,11 +89,19 @@ public class Pedido {
         return totalItens + totalIngressos;
     }
 
-    public void confirmarPagamento() {
+    public boolean estaVazio(){
+        return this.itens.isEmpty() && this.ingressos.isEmpty();
+    }
+    //Fonte da regra "não se paga pedido vazio, assim não fica mais duplicada
+    public void validarPodeSerPago(){
         validarPedidoAberto();
-        if (this.itens.isEmpty() && this.ingressos.isEmpty()) {
-            throw new IllegalStateException("Nao e possivel pagar um pedido totalmente vazio.");
+        if(estaVazio()){
+            throw new IllegalStateException("O carrinho está vazio, adicione um produto ou ingresso antes de pagar!");
         }
+    }
+
+    public void confirmarPagamento(){
+        validarPodeSerPago();
         this.status = StatusPedido.PAGO;
     }
 
