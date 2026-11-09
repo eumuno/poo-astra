@@ -16,7 +16,7 @@ public class Pedido {
         CANCELADO
     }
 
-    // ATRIBUTOS ENCAPSULADOS
+    // ATRIBUTOS
     private final int id;
     private final Cliente cliente;
     private final List<ItemPedido> itens;     // Produtos da bomboniere
@@ -24,20 +24,45 @@ public class Pedido {
     private final LocalDateTime data;
     private StatusPedido status;
 
-    // CONSTRUTOR
+    // CONSTRUTOR (pedido novo: aberto, com a data de agora)
     public Pedido(int id, Cliente cliente) {
+        this(id, cliente, LocalDateTime.now(), StatusPedido.ABERTO);
+    }
+
+    // CONSTRUTOR (privado: só quem está dentro da classe monta um pedido com data e status quaisquer)
+    private Pedido(int id, Cliente cliente, LocalDateTime data, StatusPedido status) {
         if (cliente == null) {
             throw new IllegalArgumentException("O pedido deve ter um cliente associado.");
         }
+        if (data == null || status == null) {
+            throw new IllegalArgumentException("Data e status do pedido sao obrigatorios.");
+        }
         this.id = id;
         this.cliente = cliente;
-        this.data = LocalDateTime.now();
+        this.data = data;
         this.itens = new ArrayList<>();
         this.ingressos = new ArrayList<>();
-        this.status = StatusPedido.ABERTO;
+        this.status = status;
     }
 
-    // METODOS PARA ITENS DA BOMBONIERE
+    /**
+     * Reconstrói um pedido que já existe (ex: lido do banco), com o id, a data e o status
+     * que ele tinha. Não passa por validarPedidoAberto(), porque um pedido PAGO não aceitaria
+     * adicionar itens pelos métodos normais. Usado só para restaurar dados já gravados.
+     */
+    public static Pedido restaurar(int id, Cliente cliente, LocalDateTime data, StatusPedido status,
+                                   List<ItemPedido> itens, List<Ingresso> ingressos) {
+        Pedido pedido = new Pedido(id, cliente, data, status);
+        if (itens != null) {
+            pedido.itens.addAll(itens);
+        }
+        if (ingressos != null) {
+            pedido.ingressos.addAll(ingressos);
+        }
+        return pedido;
+    }
+
+    // METODOS BOMBONIERE
     public void adicionarItem(Produto produto, int quantidade) {
         validarPedidoAberto();
         ItemPedido novoItem = new ItemPedido(produto, quantidade);
@@ -57,7 +82,7 @@ public class Pedido {
         this.itens.remove(item);
     }
 
-    // METODOS PARA INGRESSOS DO CINEMA
+    // METODOS INGRESSOS
     public void adicionarIngresso(Ingresso ingresso) {
         validarPedidoAberto();
         if (ingresso == null) {
@@ -72,8 +97,6 @@ public class Pedido {
     }
 
     // REGRAS DE NEGOCIO E CALCULOS
-
-    // Delegacao: soma os subtotais dos itens e os valores dos ingressos
     public double calcularTotal() {
         double totalItens = 0.0;
         for (ItemPedido item : this.itens) {
@@ -82,7 +105,6 @@ public class Pedido {
 
         double totalIngressos = 0.0;
         for (Ingresso ing : this.ingressos) {
-            // Nota: Se na classe do seu colega o metodo se chamar getPreco(), mude abaixo para ing.getPreco()
             totalIngressos += ing.getPrecoIngresso();
         }
 
@@ -92,6 +114,7 @@ public class Pedido {
     public boolean estaVazio(){
         return this.itens.isEmpty() && this.ingressos.isEmpty();
     }
+
     //Fonte da regra "não se paga pedido vazio, assim não fica mais duplicada
     public void validarPodeSerPago(){
         validarPedidoAberto();
@@ -132,7 +155,7 @@ public class Pedido {
         }
     }
 
-    // GETTERS (Acesso seguro de leitura)
+    // GETTERS
     public int getId() {
         return id;
     }

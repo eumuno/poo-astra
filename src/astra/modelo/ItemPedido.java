@@ -2,13 +2,12 @@ package astra.modelo;
 
 public class ItemPedido {
 
-    // Encapsulamento: atributos privados impedem alteracoes externas descontroladas
-    // O modificador final garante a imutabilidade do item apos ser registrado na compra
+    // ATRIBUTOS
     private final Produto produto;
     private final int quantidade;
     private final double precoUnitario;
 
-    // Construtor: protege os invariantes para impedir a criacao de objetos inconsistentes
+    // CONSTRUTOR
     public ItemPedido(Produto produto, int quantidade) {
         // Validacao de regras de negócio antes de instanciar o objeto
         if (produto == null) {
@@ -18,7 +17,6 @@ public class ItemPedido {
             throw new IllegalArgumentException("A quantidade deve ser de no minimo 1 unidade.");
         }
 
-        // 'this' diferencia o atributo interno da classe do parametro homonimo recebido
         this.produto = produto;
         this.quantidade = quantidade;
 
@@ -26,12 +24,29 @@ public class ItemPedido {
         this.precoUnitario = produto.getPreco();
     }
 
+    // Construtor para reconstruir um item que veio do banco: o preço é o da hora da compra,
+    // não o preço atual do produto (que pode ter mudado depois).
+    public ItemPedido(Produto produto, int quantidade, double precoUnitario) {
+        if (produto == null) {
+            throw new IllegalArgumentException("O item deve estar associado a um produto valido.");
+        }
+        if (quantidade <= 0) {
+            throw new IllegalArgumentException("A quantidade deve ser de no minimo 1 unidade.");
+        }
+        if (precoUnitario < 0) {
+            throw new IllegalArgumentException("O preco unitario nao pode ser negativo.");
+        }
+        this.produto = produto;
+        this.quantidade = quantidade;
+        this.precoUnitario = precoUnitario;
+    }
+
     // Comportamento proprio da classe: calcula o subtotal evitando classes anemicas
     public double calcularSubtotal() {
         return this.quantidade * this.precoUnitario;
     }
 
-    // Metodos de acesso (Getters): expoem apenas a leitura segura dos dados essenciais
+    // GETTERS
     public Produto getProduto() {
         return this.produto;
     }

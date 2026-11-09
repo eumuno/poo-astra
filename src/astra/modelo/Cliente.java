@@ -17,6 +17,9 @@ public class Cliente extends Usuario {
         return "Cliente";
     }
 
-    // OUTROS MÉTODOS DE COMPRAR INGRESSO E FAZER PEDIDO ESTARÃO NO CINEMASERVICE
+    // GETTER
+    public String getCpf() {
+        return cpf;
+    }
 
 }

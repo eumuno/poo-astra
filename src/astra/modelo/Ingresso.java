@@ -8,13 +8,16 @@ public class Ingresso {
     private Sessao sessao;
     private Assento assento;
     private Cliente cliente;
-    private double valorReferencia = 15; //É uma simplificação professor :)
+    private final double valorReferencia; // MUDOU: vem da sessão (Sessao.getPrecoBase)
     private TipoIngresso tipoIngresso;
     private final PoliticaPreco politicaPreco; // NOVO: quem sabe calcular o preço
 
     //CONSTRUTOR
     public Ingresso(int id, Filme filme, Sessao sessao, Assento assento, Cliente cliente, TipoIngresso tipoIngresso) {
 
+        if (sessao == null) {
+            throw new IllegalArgumentException("O ingresso precisa de uma sessão!");
+        }
         this.id = id;
         this.filme = filme;
         this.sessao = sessao;
@@ -22,6 +25,7 @@ public class Ingresso {
         this.cliente = cliente;
         this.tipoIngresso = tipoIngresso;
         this.politicaPreco = tipoIngresso.getPoliticaPreco(); // NOVO
+        this.valorReferencia = sessao.getPrecoBase(); // NOVO
     }
 
     // ENUM

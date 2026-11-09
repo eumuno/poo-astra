@@ -25,13 +25,6 @@ import java.util.Optional;
  */
 public class SessaoRepositorioJdbc implements SessaoRepositorio {
 
-    /**
-     * A tabela sessao tem a coluna preco_base (NOT NULL), mas a classe Sessao ainda não tem
-     * esse atributo. Enquanto o modelo não for ajustado, grava o mesmo valor que antes
-     * ficava fixo em Ingresso (valorReferencia = 15). Favor, arrumar quando possível.
-     */
-    static final double PRECO_BASE_PADRAO = 15.0;
-
     private final ConexaoBanco banco;
     private final FilmeRepositorio filmes;
 
@@ -60,14 +53,14 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
                 ps.setInt(2, salaId);
                 ps.setString(3, sessao.getDataHora().toString()); // ISO-8601
                 ps.setString(4, sessao.getStatus().name());       // enum como texto
-                ps.setDouble(5, PRECO_BASE_PADRAO);
+                ps.setDouble(5, sessao.getPrecoBase());
                 ps.executeUpdate();
                 try (ResultSet chaves = ps.getGeneratedKeys()) {
                     if (!chaves.next()) {
                         throw new PersistenciaException("O banco não devolveu o id da sessão gravada.");
                     }
                     return new Sessao(chaves.getInt(1), sessao.getFilme(), sessao.getSala(),
-                            sessao.getDataHora(), sessao.getStatus());
+                            sessao.getDataHora(), sessao.getStatus(), sessao.getPrecoBase());
                 }
             }
         } catch (SQLException e) {
@@ -82,13 +75,13 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
     @Override
     public List<Sessao> listarTodos() throws PersistenciaException {
         List<LinhaSessao> linhas = new ArrayList<>();
-        String sql = "SELECT id, filme_id, sala_id, data_hora, status FROM sessao ORDER BY data_hora, id";
+        String sql = "SELECT id, filme_id, sala_id, data_hora, status, preco_base FROM sessao ORDER BY data_hora, id";
         try (Connection con = banco.abrirConexao();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 linhas.add(new LinhaSessao(rs.getInt("id"), rs.getInt("filme_id"), rs.getInt("sala_id"),
-                        rs.getString("data_hora"), rs.getString("status")));
+                        rs.getString("data_hora"), rs.getString("status"), rs.getDouble("preco_base")));
             }
         } catch (SQLException e) {
             throw new PersistenciaException("Erro ao listar as sessões.", e);
@@ -104,7 +97,7 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
 
     @Override
     public Optional<Sessao> buscarPorId(int id) throws PersistenciaException {
-        String sql = "SELECT id, filme_id, sala_id, data_hora, status FROM sessao WHERE id = ?";
+        String sql = "SELECT id, filme_id, sala_id, data_hora, status, preco_base FROM sessao WHERE id = ?";
         LinhaSessao linha = null;
         try (Connection con = banco.abrirConexao();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -112,7 +105,7 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     linha = new LinhaSessao(rs.getInt("id"), rs.getInt("filme_id"), rs.getInt("sala_id"),
-                            rs.getString("data_hora"), rs.getString("status"));
+                            rs.getString("data_hora"), rs.getString("status"), rs.getDouble("preco_base"));
                 }
             }
         } catch (SQLException e) {
@@ -131,7 +124,7 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
         try (Connection con = banco.abrirConexao()) {
             Sala sala = carregarSala(con, linha.salaId);
             Sessao sessao = new Sessao(linha.id, filme, sala, LocalDateTime.parse(linha.dataHora),
-                    Sessao.statusSessao.valueOf(linha.status));
+                    Sessao.statusSessao.valueOf(linha.status), linha.precoBase);
             for (int numero : carregarAssentosOcupados(con, linha.id)) {
                 sessao.ocuparAssento(numero);
             }
@@ -202,13 +195,15 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
         final int salaId;
         final String dataHora;
         final String status;
+        final double precoBase;
 
-        LinhaSessao(int id, int filmeId, int salaId, String dataHora, String status) {
+        LinhaSessao(int id, int filmeId, int salaId, String dataHora, String status, double precoBase) {
             this.id = id;
             this.filmeId = filmeId;
             this.salaId = salaId;
             this.dataHora = dataHora;
             this.status = status;
+            this.precoBase = precoBase;
         }
     }
 }
