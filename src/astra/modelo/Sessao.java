@@ -3,6 +3,7 @@ package astra.modelo;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.time.format.DateTimeFormatter;
 
 public class Sessao {
 
@@ -74,5 +75,11 @@ public class Sessao {
 
     public statusSessao getStatus(){
         return status;
+    }
+
+    @Override
+    public String toString(){
+        //Exibir no combo de sessões do cliente.
+        return filme.getTitulo() + " - " + dataHora.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"));
     }
 }

@@ -9,7 +9,8 @@ public class Ingresso {
     private Assento assento;
     private Cliente cliente;
     private double valorReferencia = 15; //É uma simplificação professor :)
-    private  TipoIngresso tipoIngresso;
+    private TipoIngresso tipoIngresso;
+    private final PoliticaPreco politicaPreco; // NOVO: quem sabe calcular o preço
 
     //CONSTRUTOR
     public Ingresso(int id, Filme filme, Sessao sessao, Assento assento, Cliente cliente, TipoIngresso tipoIngresso) {
@@ -20,13 +21,26 @@ public class Ingresso {
         this.assento = assento;
         this.cliente = cliente;
         this.tipoIngresso = tipoIngresso;
+        this.politicaPreco = tipoIngresso.getPoliticaPreco(); // NOVO
     }
 
     // ENUM
+    // MUDOU: cada tipo de ingresso aponta para a sua política de preço.
+    // Tipo novo = uma classe nova que implementa PoliticaPreco + uma linha aqui.
     public enum TipoIngresso {
-        INTEIRA,
-        MEIA,
-        CORTESIA
+        INTEIRA(new PrecoInteira()),
+        MEIA(new PrecoMeia()),
+        CORTESIA(new PrecoCortesia());
+
+        private final PoliticaPreco politicaPreco;
+
+        TipoIngresso(PoliticaPreco politicaPreco) {
+            this.politicaPreco = politicaPreco;
+        }
+
+        public PoliticaPreco getPoliticaPreco() {
+            return politicaPreco;
+        }
     }
 
     // MÉTODOS
@@ -58,20 +72,9 @@ public class Ingresso {
         return valorReferencia;
     }
 
+    // MUDOU: antes era um switch por tipo; agora pede para a política calcular (polimorfismo)
     public double getPrecoIngresso(){
-        switch(tipoIngresso){
-            case INTEIRA:
-                return valorReferencia;
-
-            case MEIA:
-                return valorReferencia / 2;
-
-            case CORTESIA:
-            return 0;
-
-            default:
-                throw new IllegalStateException("Tipo de ingresso inválido!");
-        }
+        return politicaPreco.calcular(valorReferencia);
     }
 
     public String gerarResumoIngresso(){
