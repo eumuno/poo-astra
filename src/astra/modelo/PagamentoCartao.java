@@ -3,7 +3,6 @@ package astra.modelo;
 import astra.excecoes.PagamentoException;
 import java.time.YearMonth;
 
-// Herança: PagamentoCartao É UM Pagamento
 public class PagamentoCartao extends Pagamento {
 
     private final String titular;
@@ -17,7 +16,6 @@ public class PagamentoCartao extends Pagamento {
         this.validade = validade;
     }
 
-    // Polimorfismo: o Cartão processa do jeito dele
     @Override
     public void processarPagamento() throws PagamentoException {
         if (validade.isBefore(YearMonth.now())) {
@@ -26,6 +24,9 @@ public class PagamentoCartao extends Pagamento {
         }
         mudarStatus(Status.APROVADO);
     }
+
+    @Override
+    public Forma getForma() { return Forma.CARTAO; }
 
     public String getTitular() { return titular; }
     public String getFinalCartao() { return finalCartao; }
