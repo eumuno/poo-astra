@@ -1,19 +1,24 @@
 package astra.interfacegrafica;
 
-import astra.servico.CinemaService;
 import astra.modelo.Administrador;
 import astra.modelo.Filme;
 import astra.modelo.Produto;
+import astra.servico.FilmeService;
+import astra.servico.ProdutoService;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class TelaAdmin extends JFrame {
 
-    private CinemaService servico;
+    private final Administrador admin;
+    private final FilmeService filmeService;
+    private final ProdutoService produtoService;
 
-    public TelaAdmin(CinemaService servico) {
-        this.servico = servico;
+    public TelaAdmin(Administrador admin, FilmeService filmeService, ProdutoService produtoService) {
+        this.admin = admin;
+        this.filmeService = filmeService;
+        this.produtoService = produtoService;
 
         setTitle("Área do Administrador - Sistema Astra");
         setSize(500, 450);
@@ -59,9 +64,7 @@ public class TelaAdmin extends JFrame {
         botaoSalvar.addActionListener(e -> {
             try {
                 int duracao = Integer.parseInt(campoDuracao.getText());
-                Administrador admin = new Administrador(1, "Admin", "admin@astra", "123");
-
-                servico.cadastrarFilme(admin, campoTitulo.getText(), duracao,
+                filmeService.cadastrarFilme(admin, campoTitulo.getText(), duracao,
                         (Filme.classificacaoIndicativa) comboClassificacao.getSelectedItem(),
                         campoGenero.getText(), campoDiretor.getText(),
                         checkAtivo.isSelected(), checkDublado.isSelected(), campoSinopse.getText());
@@ -104,9 +107,7 @@ public class TelaAdmin extends JFrame {
             try {
                 double preco = Double.parseDouble(campoPreco.getText().replace(",", "."));
                 int estoque = Integer.parseInt(campoEstoque.getText());
-                Administrador admin = new Administrador(1, "Admin", "admin@astra", "123");
-
-                servico.cadastrarProduto(admin, campoNome.getText(), campoDescricao.getText(),
+                produtoService.cadastrarProduto(admin, campoNome.getText(), campoDescricao.getText(),
                         preco, estoque, (Produto.CategoriaProduto) comboCategoria.getSelectedItem());
 
                 JOptionPane.showMessageDialog(this, "Produto cadastrado com sucesso!");
