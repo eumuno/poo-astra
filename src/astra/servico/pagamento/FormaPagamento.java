@@ -10,5 +10,5 @@ public interface FormaPagamento {
     //nome para o botão
     String getNome();
 
-    Pagamento criarPagamento(double calor, Cliente cliente);
+    Pagamento criarPagamento(double valor, Cliente cliente);
 }
