@@ -3,10 +3,12 @@ package astra.modelo;
 import astra.excecoes.PagamentoException;
 import java.time.LocalDateTime;
 
-// Abstrata: só existem Pix ou Cartão, nunca "pagamento genérico"
 public abstract class Pagamento {
 
     public enum Status { PENDENTE, APROVADO, RECUSADO }
+
+    // Qual é o meio de pagamento (gravado no banco; os valores são os da tabela pagamento)
+    public enum Forma { PIX, CARTAO }
 
     private final double valor;
     private final LocalDateTime data = LocalDateTime.now();
@@ -18,6 +20,9 @@ public abstract class Pagamento {
 
     // Cada subclasse (Pix, Cartão) processa do seu jeito
     public abstract void processarPagamento() throws PagamentoException;
+
+    // Cada subclasse diz qual é a sua forma (sem precisar de instanceof em quem usa)
+    public abstract Forma getForma();
 
     // Só dá pra mudar o status se ainda estiver pendente
     protected void mudarStatus(Status novo) throws PagamentoException {

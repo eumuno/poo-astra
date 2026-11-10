@@ -3,7 +3,6 @@ package astra.modelo;
 import astra.excecoes.PagamentoException;
 import java.time.LocalDateTime;
 
-// Herança: PagamentoPix É UM Pagamento
 public class PagamentoPix extends Pagamento {
 
     private final String chavePix;
@@ -14,7 +13,6 @@ public class PagamentoPix extends Pagamento {
         this.chavePix = chavePix;
     }
 
-    // Polimorfismo: o Pix processa do jeito dele
     @Override
     public void processarPagamento() throws PagamentoException {
         if (LocalDateTime.now().isAfter(expiraEm)) {
@@ -23,6 +21,9 @@ public class PagamentoPix extends Pagamento {
         }
         mudarStatus(Status.APROVADO);
     }
+
+    @Override
+    public Forma getForma() { return Forma.PIX; }
 
     public String getChavePix() { return chavePix; }
     public LocalDateTime getExpiraEm() { return expiraEm; }
