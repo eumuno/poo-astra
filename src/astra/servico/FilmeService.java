@@ -16,9 +16,12 @@ public class FilmeService {
 
     public Filme cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacao, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) throws PersistenciaException{
         if(admin == null){
-            throw new IllegalArgumentException("O título do filme é obrigatório.");
+            throw new IllegalArgumentException("Só um administrador pode cadastrar filmes!");
         }
         if(titulo == null || titulo.isBlank()){
+            throw new IllegalArgumentException("O título do filme é obrigatório.");
+        }
+        if(duracaoMinutos <= 0){
             throw new IllegalArgumentException("Duração do filme deve ser maior que zero.");
         }
         Filme novo = new Filme(0, titulo, duracaoMinutos, classificacao, genero, diretor, ativo, dublado, sinopse);
