@@ -38,7 +38,7 @@ public class VendaService {
 
     public Ingresso venderIngresso (Pedido pedido, Sessao sessao, int numeroAssento, Ingresso.TipoIngresso tipo) throws AssentoIndisponivelException {
         if(sessao == null){
-            throw new IllegalArgumentException("Você precisa escolhre uma sessão!");
+            throw new IllegalArgumentException("Você precisa escolher uma sessão!");
         }
         if(!sessao.estaDisponivel()){
             throw new IllegalStateException("A sessão não está disponível para venda!");
