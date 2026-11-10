@@ -21,6 +21,10 @@ public class TelaCliente extends JFrame {
     private final Cliente clienteAtual;
     private final Pedido pedidoAtual;
 
+    // COMBOS RECARREGADOS DO BANCO SEMPRE Q A ABA É ABERTA
+    private final JComboBox<Sessao> comboSessoes = new JComboBox<>();
+    private final JComboBox<Produto> comboProdutos = new JComboBox<>();
+
     public TelaCliente(Cliente cliente, ProdutoService produtoService, SessaoService sessaoService, VendaService vendaService) {
         this.produtoService = produtoService;
         this.sessaoService = sessaoService;
@@ -39,6 +43,14 @@ public class TelaCliente extends JFrame {
         abas.addTab("1. Ingressos", criarPainelIngresso());
         abas.addTab("2. Bomboniere", criarPainelProduto());
         abas.addTab("3. Pagamento", criarPainelPagamento());
+
+        // O Q O ADMIN CADASTRAR DEPOIS Q A TELA ABRIU APARECE AO TROCAR D ABA
+        carregarSessoes();
+        carregarProdutos();
+        abas.addChangeListener(e -> {
+            if (abas.getSelectedIndex() == 0) carregarSessoes();
+            if (abas.getSelectedIndex() == 1) carregarProdutos();
+        });
         add(abas);
     }
 
@@ -50,14 +62,6 @@ public class TelaCliente extends JFrame {
         painel.add(new JLabel("Selecione a Sessão:"));
 
         // CAIXA Q PUXA AS SESSÕES DISPONÍVEIS DO BANCO
-        JComboBox<Sessao> comboSessoes = new JComboBox<>();
-        try {
-            for (Sessao s : sessaoService.listarSessoesDisponiveis()) {
-                comboSessoes.addItem(s);
-            }
-        } catch (PersistenciaException ex) {
-            mostrarErroBanco(ex);
-        }
         painel.add(comboSessoes);
 
         // P SELECIONAR TIPO DE INGRESSO
@@ -104,14 +108,6 @@ public class TelaCliente extends JFrame {
 
         painel.add(new JLabel("Produtos da Bomboniere:"));
 
-        JComboBox<Produto> comboProdutos = new JComboBox<>();
-        try {
-            for (Produto p : produtoService.listarProdutos()) {
-                comboProdutos.addItem(p); // COLOCA OBJETO PRODUTO INTEIRO NA CAIXA
-            }
-        } catch (PersistenciaException ex) {
-            mostrarErroBanco(ex);
-        }
         painel.add(comboProdutos);
 
         JButton botaoComprar = new JButton("Adicionar Produto ao Pedido");
@@ -171,6 +167,28 @@ public class TelaCliente extends JFrame {
             mostrarErroBanco(ex);
         } catch (PagamentoException | IllegalStateException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro no Pagamento", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void carregarSessoes() {
+        comboSessoes.removeAllItems();
+        try {
+            for (Sessao s : sessaoService.listarSessoesDisponiveis()) {
+                comboSessoes.addItem(s);
+            }
+        } catch (PersistenciaException ex) {
+            mostrarErroBanco(ex);
+        }
+    }
+
+    private void carregarProdutos() {
+        comboProdutos.removeAllItems();
+        try {
+            for (Produto p : produtoService.listarProdutos()) {
+                comboProdutos.addItem(p); // COLOCA OBJETO PRODUTO INTEIRO NA CAIXA
+            }
+        } catch (PersistenciaException ex) {
+            mostrarErroBanco(ex);
         }
     }
 

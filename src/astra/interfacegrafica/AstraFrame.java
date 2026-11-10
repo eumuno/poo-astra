@@ -69,7 +69,7 @@ public class AstraFrame extends JFrame {
         botaoAdmin.addActionListener(evento -> {
             Usuario usuario = buscarUsuario("admin@astra");
             if (usuario instanceof Administrador admin) {
-                new TelaAdmin(admin, filmeService, produtoService).setVisible(true);
+                new TelaAdmin(admin, filmeService, produtoService, sessaoService).setVisible(true);
             } else if (usuario != null) {
                 mostrarErro("O administrador de demonstração não foi encontrado no banco.");
             }
