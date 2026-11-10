@@ -1,19 +1,35 @@
 package astra.interfacegrafica;
 
-import astra.servico.CinemaService;
 import astra.modelo.Administrador;
 import astra.modelo.Filme;
 import astra.modelo.Produto;
+import astra.servico.FilmeService;
+import astra.servico.ProdutoService;
+import astra.servico.SessaoService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class TelaAdmin extends JFrame {
 
-    private CinemaService servico;
+    private final Administrador admin;
+    private final FilmeService filmeService;
+    private final ProdutoService produtoService;
+    private final SessaoService sessaoService;
 
-    public TelaAdmin(CinemaService servico) {
-        this.servico = servico;
+    private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    // COMBO D FILMES DA ABA SESSÃO (recarregado sempre q a aba é aberta)
+    private final JComboBox<Filme> comboFilmesSessao = new JComboBox<>();
+
+    public TelaAdmin(Administrador admin, FilmeService filmeService, ProdutoService produtoService, SessaoService sessaoService) {
+        this.admin = admin;
+        this.filmeService = filmeService;
+        this.produtoService = produtoService;
+        this.sessaoService = sessaoService;
 
         setTitle("Área do Administrador - Sistema Astra");
         setSize(500, 450);
@@ -24,6 +40,14 @@ public class TelaAdmin extends JFrame {
         JTabbedPane abas = new JTabbedPane();
         abas.addTab("Cadastrar Filme", criarPainelFilme());
         abas.addTab("Cadastrar Produto", criarPainelProduto());
+        abas.addTab("Cadastrar Sessão", criarPainelSessao());
+
+        // AO ABRIR A ABA D SESSÃO, BUSCA OS FILMES D NOVO (inclui os recém-cadastrados)
+        abas.addChangeListener(e -> {
+            if (abas.getSelectedIndex() == 2) {
+                carregarFilmes();
+            }
+        });
 
         add(abas);
     }
@@ -41,7 +65,7 @@ public class TelaAdmin extends JFrame {
         JTextField campoSinopse = new JTextField();
         JComboBox<Filme.classificacaoIndicativa> comboClassificacao = new JComboBox<>(Filme.classificacaoIndicativa.values());
         JCheckBox checkDublado = new JCheckBox("É dublado?");
-        JCheckBox checkAtivo = new JCheckBox("Está ativo?");
+        JCheckBox checkAtivo = new JCheckBox("Está ativo?", true);
         JButton botaoSalvar = new JButton("Salvar Filme");
 
         // ADICIONA NA TELA
@@ -59,9 +83,7 @@ public class TelaAdmin extends JFrame {
         botaoSalvar.addActionListener(e -> {
             try {
                 int duracao = Integer.parseInt(campoDuracao.getText());
-                Administrador admin = new Administrador(1, "Admin", "admin@astra", "123");
-
-                servico.cadastrarFilme(admin, campoTitulo.getText(), duracao,
+                filmeService.cadastrarFilme(admin, campoTitulo.getText(), duracao,
                         (Filme.classificacaoIndicativa) comboClassificacao.getSelectedItem(),
                         campoGenero.getText(), campoDiretor.getText(),
                         checkAtivo.isSelected(), checkDublado.isSelected(), campoSinopse.getText());
@@ -104,9 +126,7 @@ public class TelaAdmin extends JFrame {
             try {
                 double preco = Double.parseDouble(campoPreco.getText().replace(",", "."));
                 int estoque = Integer.parseInt(campoEstoque.getText());
-                Administrador admin = new Administrador(1, "Admin", "admin@astra", "123");
-
-                servico.cadastrarProduto(admin, campoNome.getText(), campoDescricao.getText(),
+                produtoService.cadastrarProduto(admin, campoNome.getText(), campoDescricao.getText(),
                         preco, estoque, (Produto.CategoriaProduto) comboCategoria.getSelectedItem());
 
                 JOptionPane.showMessageDialog(this, "Produto cadastrado com sucesso!");
@@ -119,5 +139,54 @@ public class TelaAdmin extends JFrame {
         });
 
         return painel;
+    }
+
+    // ABA SESSÕES: SEM SESSÃO O FILME NÃO APARECE P O CLIENTE COMPRAR
+    private JPanel criarPainelSessao() {
+        JPanel painel = new JPanel(new GridLayout(6, 2, 5, 5));
+        painel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JTextField campoSala = new JTextField("1");
+        JTextField campoDataHora = new JTextField(LocalDateTime.now().plusDays(1).withHour(21).withMinute(0).format(FORMATO_DATA));
+        JTextField campoPreco = new JTextField("15.0");
+        JButton botaoSalvar = new JButton("Salvar Sessão");
+
+        painel.add(new JLabel("Filme:")); painel.add(comboFilmesSessao);
+        painel.add(new JLabel("Número da sala:")); painel.add(campoSala);
+        painel.add(new JLabel("Data e hora (dd/MM/aaaa HH:mm):")); painel.add(campoDataHora);
+        painel.add(new JLabel("Preço base (R$):")); painel.add(campoPreco);
+        painel.add(new JLabel("")); painel.add(botaoSalvar);
+
+        botaoSalvar.addActionListener(e -> {
+            try {
+                int sala = Integer.parseInt(campoSala.getText().trim());
+                LocalDateTime dataHora = LocalDateTime.parse(campoDataHora.getText().trim(), FORMATO_DATA);
+                double preco = Double.parseDouble(campoPreco.getText().trim().replace(",", "."));
+
+                sessaoService.cadastrarSessao(admin, (Filme) comboFilmesSessao.getSelectedItem(), sala, dataHora, preco);
+                JOptionPane.showMessageDialog(this, "Sessão cadastrada com sucesso!");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Sala ou preço contêm números inválidos!", "Erro", JOptionPane.ERROR_MESSAGE);
+            } catch (DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(this, "Use o formato dd/MM/aaaa HH:mm na data.", "Erro", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        return painel;
+    }
+
+    private void carregarFilmes() {
+        comboFilmesSessao.removeAllItems();
+        try {
+            for (Filme f : filmeService.listarFilmes()) {
+                if (f.isAtivo()) {
+                    comboFilmesSessao.addItem(f);
+                }
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
