@@ -63,7 +63,7 @@ public class TelaAdmin extends JFrame {
         JTextField campoGenero = new JTextField();
         JTextField campoDiretor = new JTextField();
         JTextField campoSinopse = new JTextField();
-        JComboBox<Filme.classificacaoIndicativa> comboClassificacao = new JComboBox<>(Filme.classificacaoIndicativa.values());
+        JComboBox<Filme.ClassificacaoIndicativa> comboClassificacao = new JComboBox<>(Filme.ClassificacaoIndicativa.values());
         JCheckBox checkDublado = new JCheckBox("É dublado?");
         JCheckBox checkAtivo = new JCheckBox("Está ativo?", true);
         JButton botaoSalvar = new JButton("Salvar Filme");
@@ -84,7 +84,7 @@ public class TelaAdmin extends JFrame {
             try {
                 int duracao = Integer.parseInt(campoDuracao.getText());
                 filmeService.cadastrarFilme(admin, campoTitulo.getText(), duracao,
-                        (Filme.classificacaoIndicativa) comboClassificacao.getSelectedItem(),
+                        (Filme.ClassificacaoIndicativa) comboClassificacao.getSelectedItem(),
                         campoGenero.getText(), campoDiretor.getText(),
                         checkAtivo.isSelected(), checkDublado.isSelected(), campoSinopse.getText());
 
