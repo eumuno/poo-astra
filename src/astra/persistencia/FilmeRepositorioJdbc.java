@@ -117,7 +117,7 @@ public class FilmeRepositorioJdbc implements FilmeRepositorio {
                 rs.getInt("id"),
                 rs.getString("titulo"),
                 rs.getInt("duracao_minutos"),
-                Filme.classificacaoIndicativa.valueOf(rs.getString("classificacao")),
+                Filme.ClassificacaoIndicativa.valueOf(rs.getString("classificacao")),
                 rs.getString("genero"),
                 rs.getString("diretor"),
                 rs.getInt("ativo") == 1,

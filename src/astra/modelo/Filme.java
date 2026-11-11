@@ -7,7 +7,7 @@ public class Filme {
     private int id;
     private String titulo;
     private int duracaoMinutos;
-    private classificacaoIndicativa classificacaoIndicativa;
+    private ClassificacaoIndicativa classificacaoIndicativa;
     private String genero;
     private String diretor;
     private boolean ativo;
@@ -15,7 +15,7 @@ public class Filme {
     private String sinopse;
 
     //ENUM
-    public enum classificacaoIndicativa{
+    public enum ClassificacaoIndicativa {
         LIVRE("Livre."),
         DEZ("10 anos."),
         DOZE("12 anos."),
@@ -24,7 +24,7 @@ public class Filme {
         DEZOITO("18 anos.");
 
         private String descricao;
-        classificacaoIndicativa(String descricao){
+        ClassificacaoIndicativa(String descricao){
             this.descricao = descricao;
         }
         public String getDescricao(){
@@ -33,7 +33,7 @@ public class Filme {
     }
 
     //CONSTRUTOR
-    public Filme(int id, String titulo, int duracaoMinutos, classificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
+    public Filme(int id, String titulo, int duracaoMinutos, ClassificacaoIndicativa classificacaoIndicativa, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) {
         this.id = id;
         this.titulo = titulo;
         this.duracaoMinutos = duracaoMinutos;
@@ -58,7 +58,7 @@ public class Filme {
         return duracaoMinutos;
     }
 
-    public classificacaoIndicativa getClassificacaoIndicativa() {
+    public ClassificacaoIndicativa getClassificacaoIndicativa() {
         return classificacaoIndicativa;
     }
 
