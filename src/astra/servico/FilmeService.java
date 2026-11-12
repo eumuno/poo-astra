@@ -14,7 +14,7 @@ public class FilmeService {
         this.repositorio = repositorio;
     }
 
-    public Filme cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.classificacaoIndicativa classificacao, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) throws PersistenciaException{
+    public Filme cadastrarFilme(Administrador admin, String titulo, int duracaoMinutos, Filme.ClassificacaoIndicativa classificacao, String genero, String diretor, boolean ativo, boolean dublado, String sinopse) throws PersistenciaException{
         if(admin == null){
             throw new IllegalArgumentException("Só um administrador pode cadastrar filmes!");
         }

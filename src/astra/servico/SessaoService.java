@@ -35,7 +35,7 @@ public class SessaoService {
         }
         // o repositório só usa o número da sala para achá-la no banco; os assentos vêm de lá
         Sala sala = new Sala(numeroSala, new ArrayList<>());
-        return repositorio.salvar(new Sessao(0, filme, sala, dataHora, Sessao.statusSessao.AGENDADA, precoBase));
+        return repositorio.salvar(new Sessao(0, filme, sala, dataHora, Sessao.StatusSessao.AGENDADA, precoBase));
     }
 
     public List<Sessao> listarSessoesDisponiveis() throws PersistenciaException{

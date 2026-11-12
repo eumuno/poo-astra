@@ -11,7 +11,6 @@ import astra.servico.pagamento.FormaPagamentoPix;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -84,11 +83,11 @@ public class TesteVenda {
         check(s1.getPrecoBase() == 15.0, "sessão do seed tem preço base 15 lido do banco");
         Filme filme = filmes.listarTodos().get(0);
         Sessao cara = sessoes.salvar(new Sessao(0, filme, s1.getSala(), LocalDateTime.of(2030, 5, 1, 20, 0),
-                Sessao.statusSessao.AGENDADA, 40.0));
+                Sessao.StatusSessao.AGENDADA, 40.0));
         check(sessoes.buscarPorId(cara.getId()).get().getPrecoBase() == 40.0, "preço base 40 gravado e lido de volta");
         Ingresso teste = new Ingresso(0, filme, cara, cara.getSala().buscarAssento(1), cliente, Ingresso.TipoIngresso.MEIA);
         check(teste.getPrecoIngresso() == 20.0, "meia na sessão de R$ 40 custa 20 (preço vem da sessão, não do 15 fixo)");
-        try { new Sessao(0, filme, s1.getSala(), LocalDateTime.now(), Sessao.statusSessao.AGENDADA, -1); check(false, "preço negativo"); }
+        try { new Sessao(0, filme, s1.getSala(), LocalDateTime.now(), Sessao.StatusSessao.AGENDADA, -1); check(false, "preço negativo"); }
         catch (IllegalArgumentException e) { check(true, "preço base negativo é recusado"); }
 
         // ---------------- VENDA COMPLETA ----------------
