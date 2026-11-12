@@ -124,7 +124,7 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
         try (Connection con = banco.abrirConexao()) {
             Sala sala = carregarSala(con, linha.salaId);
             Sessao sessao = new Sessao(linha.id, filme, sala, LocalDateTime.parse(linha.dataHora),
-                    Sessao.statusSessao.valueOf(linha.status), linha.precoBase);
+                    Sessao.StatusSessao.valueOf(linha.status), linha.precoBase);
             for (int numero : carregarAssentosOcupados(con, linha.id)) {
                 sessao.ocuparAssento(numero);
             }
@@ -152,7 +152,7 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
             ps.setInt(1, salaId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    assentos.add(new Assento(rs.getInt("numero"), Assento.tipoAssento.valueOf(rs.getString("tipo"))));
+                    assentos.add(new Assento(rs.getInt("numero"), Assento.TipoAssento.valueOf(rs.getString("tipo"))));
                 }
             }
         }
