@@ -12,7 +12,7 @@ public class Sessao {
     private Filme filme;
     private Sala sala;
     private LocalDateTime dataHora;
-    private statusSessao status;
+    private StatusSessao status;
     private final double precoBase; // valor do ingresso inteiro nesta sessão (a meia é metade, a cortesia é zero)
     private Set<Integer> assentosOcupados = new HashSet<>();
 
@@ -20,7 +20,7 @@ public class Sessao {
     public static final double PRECO_BASE_PADRAO = 15.0;
 
     //CONSTRUTORES
-    public Sessao(int id, Filme filme, Sala sala, LocalDateTime dataHora, statusSessao status, double precoBase) {
+    public Sessao(int id, Filme filme, Sala sala, LocalDateTime dataHora, StatusSessao status, double precoBase) {
         if (precoBase < 0) {
             throw new IllegalArgumentException("O preço base da sessão não pode ser negativo!");
         }
@@ -33,12 +33,12 @@ public class Sessao {
     }
 
     // mantido para o código que ainda não informa o preço: usa o padrão
-    public Sessao(int id, Filme filme, Sala sala, LocalDateTime dataHora, statusSessao status) {
+    public Sessao(int id, Filme filme, Sala sala, LocalDateTime dataHora, StatusSessao status) {
         this(id, filme, sala, dataHora, status, PRECO_BASE_PADRAO);
     }
 
     // ENUM
-    public enum statusSessao {
+    public enum StatusSessao {
         AGENDADA,
         ENCERRADA,
         CANCELADA
@@ -46,7 +46,7 @@ public class Sessao {
 
     // MÉTODOS
     public boolean estaDisponivel(){
-        return status == statusSessao.AGENDADA;
+        return status == StatusSessao.AGENDADA;
     }
 
    public boolean possuiVagas(){
@@ -66,7 +66,7 @@ public class Sessao {
    }
 
     public void cancelar(){
-        status = statusSessao.CANCELADA;
+        status = StatusSessao.CANCELADA;
     }
 
     //GETTERS
@@ -86,7 +86,7 @@ public class Sessao {
         return dataHora;
     }
 
-    public statusSessao getStatus(){
+    public StatusSessao getStatus(){
         return status;
     }
 
