@@ -1,6 +1,7 @@
 package teste;
 
 import astra.excecoes.AssentoIndisponivelException;
+import astra.excecoes.EstoqueInsuficienteException;
 import astra.excecoes.PersistenciaException;
 import astra.modelo.*;
 import astra.persistencia.*;
@@ -37,6 +38,10 @@ public class TesteVenda {
         }
     }
 
+    static int estoque(ProdutoRepositorio produtos, int id) throws Exception {
+        return produtos.buscarPorId(id).get().getEstoque();
+    }
+
     static String texto(ConexaoBanco banco, String sql) throws Exception {
         try (Connection c = banco.abrirConexao(); Statement st = c.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -57,7 +62,7 @@ public class TesteVenda {
         IngressoRepositorio ingressos = new IngressoRepositorioJdbc(banco, sessoes, usuarios);
         PedidoRepositorio pedidos = new PedidoRepositorioJdbc(banco, usuarios, produtos, ingressos);
         List<FormaPagamento> formas = List.of(new FormaPagamentoPix(), new FormaPagamentoCartao());
-        VendaService venda = new VendaService(formas, pedidos, ingressos);
+        VendaService venda = new VendaService(formas, pedidos, ingressos, produtos);
 
         // ---------------- USUÁRIO ----------------
         Usuario admin = usuarios.autenticar("admin@astra", "123").orElse(null);
@@ -102,6 +107,7 @@ public class TesteVenda {
         check(pg.getStatus() == Pagamento.Status.APROVADO && pg.getForma() == Pagamento.Forma.PIX, "pagamento Pix aprovado e com forma PIX");
         check(contar(banco, "pedido") == pedidosAntes + 1 && contar(banco, "ingresso") == 2 && contar(banco, "item_pedido") == 1 && contar(banco, "pagamento") == 1,
                 "venda gravada: 1 pedido, 2 ingressos, 1 item, 1 pagamento");
+        check(estoque(produtos, pipoca.getId()) == pipoca.getEstoque() - 2, "estoque da pipoca abatido na venda: " + pipoca.getEstoque() + " -> " + (pipoca.getEstoque() - 2));
 
         List<Pedido> doCliente = pedidos.listarPorCliente(cliente.getId());
         check(doCliente.size() == 1, "listarPorCliente acha o pedido");
@@ -124,7 +130,9 @@ public class TesteVenda {
         check(ingressos.listarPorPedido(lido.getId()).size() == 2, "IngressoRepositorio.listarPorPedido");
 
         // preço histórico: mudar o preço do produto depois NÃO muda o pedido antigo
-        produtos.salvar(new Produto(pipoca.getId(), pipoca.getNome(), pipoca.getDescricao(), 30.0, pipoca.getEstoque(), pipoca.getCategoria()));
+        Produto pipocaAtual = produtos.buscarPorId(pipoca.getId()).get(); // recarrega: o objeto 'pipoca' tem o estoque de ANTES da venda
+        produtos.salvar(new Produto(pipocaAtual.getId(), pipocaAtual.getNome(), pipocaAtual.getDescricao(), 30.0, pipocaAtual.getEstoque(), pipocaAtual.getCategoria()));
+        check(estoque(produtos, pipoca.getId()) == pipoca.getEstoque() - 2, "mudar o preço (com o produto recarregado) não mexe no estoque");
         Pedido relido = pedidos.buscarPorId(lido.getId()).get();
         check(relido.getItens().get(0).getPrecoUnitario() == 25.0 && relido.calcularTotal() == 72.5, "preço do item no pedido antigo continua 25 mesmo com produto a 30");
 
@@ -183,6 +191,61 @@ public class TesteVenda {
         // restaurar() não vale para pedido aberto novo: confere que o pedido PAGO lido não aceita item
         try { relido.adicionarItem(pipoca, 1); check(false, "pedido pago aceitou item"); }
         catch (IllegalStateException e) { check(true, "pedido restaurado como PAGO continua protegido (não aceita item novo)"); }
+
+        // ---------------- ESTOQUE ----------------
+        Produto choc = produtos.salvar(new Produto(0, "Chocolate", "barra", 6.0, 3, Produto.CategoriaProduto.DOCE));
+        Produto refri = produtos.salvar(new Produto(0, "Refrigerante", "500ml", 8.0, 5, Produto.CategoriaProduto.BEBIDA));
+
+        // três janelas, cada uma com 2 chocolates no carrinho (o estoque é 3): nada impede de adicionar
+        Pedido x = venda.iniciarPedido(cliente);
+        Pedido y = venda.iniciarPedido(cliente);
+        Pedido z = venda.iniciarPedido(cliente);
+        venda.adicionarProduto(x, choc, 2);
+        venda.adicionarProduto(y, choc, 2);
+        venda.adicionarProduto(z, choc, 2);
+        venda.finalizarPedido(x, formas.get(0));
+        check(estoque(produtos, choc.getId()) == 1, "janela X pagou 2 chocolates: estoque 3 -> 1");
+
+        int pagamentosAntes = contar(banco, "pagamento");
+        try { venda.finalizarPedido(y, formas.get(0)); check(false, "Y deveria falhar"); }
+        catch (EstoqueInsuficienteException e) { check(e.getMessage().contains("restam 1") && e.getMessage().contains("Chocolate"), "janela Y barrada: " + e.getMessage()); }
+        check(y.getStatus() == Pedido.StatusPedido.ABERTO && contar(banco, "pagamento") == pagamentosAntes,
+                "janela Y barrada ANTES de cobrar: pedido continua ABERTO e nenhum pagamento novo");
+
+        // pula a conferência do VendaService: quem segura é o UPDATE ... WHERE estoque >= ? da transação
+        z.confirmarPagamento();
+        try { pedidos.salvar(z, new astra.modelo.PagamentoPix(12, "chave")); check(false, "UPDATE deveria barrar"); }
+        catch (EstoqueInsuficienteException e) { check(true, "o banco barra na transação mesmo sem a conferência prévia: " + e.getMessage()); }
+        check(estoque(produtos, choc.getId()) == 1, "estoque do chocolate continua 1 depois da tentativa barrada");
+
+        // ROLLBACK da baixa: 1º item (refrigerante) passa, 2º item (chocolate) falta -> a baixa do refrigerante some
+        int pedidosAntes2 = contar(banco, "pedido"), itensAntes2 = contar(banco, "item_pedido"), pagAntes2 = contar(banco, "pagamento");
+        Pedido w = new Pedido(0, cliente);
+        w.adicionarItem(refri, 2);
+        w.adicionarItem(choc, 2);
+        w.confirmarPagamento();
+        try { pedidos.salvar(w, new astra.modelo.PagamentoPix(32, "chave")); check(false, "w deveria falhar"); }
+        catch (EstoqueInsuficienteException e) { check(true, "pedido com 2 itens falha no 2º: " + e.getMessage()); }
+        check(estoque(produtos, refri.getId()) == 5 && estoque(produtos, choc.getId()) == 1
+                        && contar(banco, "pedido") == pedidosAntes2 && contar(banco, "item_pedido") == itensAntes2 && contar(banco, "pagamento") == pagAntes2,
+                "ROLLBACK: a baixa do refrigerante (1º item) foi desfeita, e nada do pedido ficou gravado");
+
+        // o mesmo produto em dois itens: cada item (3) cabe sozinho no estoque (5), mas a soma (6) não
+        Pedido dobro = venda.iniciarPedido(cliente);
+        venda.adicionarProduto(dobro, refri, 3);
+        venda.adicionarProduto(dobro, refri, 3);
+        try { venda.finalizarPedido(dobro, formas.get(0)); check(false, "soma deveria falhar"); }
+        catch (EstoqueInsuficienteException e) { check(e.getMessage().contains("pede 6"), "conferência soma o mesmo produto em vários itens: " + e.getMessage()); }
+
+        // limite exato: levar a última unidade funciona (estoque vai a 0), e a seguinte falha
+        Pedido ultima = venda.iniciarPedido(cliente);
+        venda.adicionarProduto(ultima, choc, 1);
+        venda.finalizarPedido(ultima, formas.get(1));
+        check(estoque(produtos, choc.getId()) == 0, "levar exatamente a última unidade funciona: estoque 1 -> 0");
+        Pedido alemDoFim = venda.iniciarPedido(cliente);
+        venda.adicionarProduto(alemDoFim, choc, 1);
+        try { venda.finalizarPedido(alemDoFim, formas.get(1)); check(false, "estoque zerado"); }
+        catch (EstoqueInsuficienteException e) { check(e.getMessage().contains("restam 0"), "com estoque zerado a venda é barrada: " + e.getMessage()); }
 
         System.out.println("\nTODOS OS " + ok + " TESTES PASSARAM");
     }
