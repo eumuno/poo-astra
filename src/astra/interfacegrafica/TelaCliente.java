@@ -1,6 +1,7 @@
 package astra.interfacegrafica;
 
 import astra.excecoes.AssentoIndisponivelException;
+import astra.excecoes.EstoqueInsuficienteException;
 import astra.excecoes.PagamentoException;
 import astra.excecoes.PersistenciaException;
 import astra.modelo.*;
@@ -163,6 +164,8 @@ public class TelaCliente extends JFrame {
             dispose();
         } catch (AssentoIndisponivelException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Assento Ocupado", JOptionPane.WARNING_MESSAGE);
+        } catch (EstoqueInsuficienteException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Estoque Insuficiente", JOptionPane.WARNING_MESSAGE);
         } catch (PersistenciaException ex) {
             mostrarErroBanco(ex);
         } catch (PagamentoException | IllegalStateException ex) {

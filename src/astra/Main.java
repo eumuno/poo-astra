@@ -42,7 +42,7 @@ public class Main {
         FilmeService filmeService = new FilmeService(filmes);
         ProdutoService produtoService = new ProdutoService(produtos);
         SessaoService sessaoService = new SessaoService(sessoes);
-        VendaService vendaService = new VendaService(formasPagamento, pedidos, ingressos);
+        VendaService vendaService = new VendaService(formasPagamento, pedidos, ingressos, produtos);
 
         // inicia a GUI d forma segura
         SwingUtilities.invokeLater(() -> {

@@ -1,6 +1,7 @@
 package astra.persistencia;
 
 import astra.excecoes.AssentoIndisponivelException;
+import astra.excecoes.EstoqueInsuficienteException;
 import astra.excecoes.PersistenciaException;
 import astra.modelo.Cliente;
 import astra.modelo.Ingresso;
@@ -28,7 +29,7 @@ import java.util.Optional;
  *
  * Tabelas envolvidas: pedido, item_pedido, ingresso e pagamento.
  * Gravar a venda usa UMA conexão com autoCommit desligado (uma transação): ou as quatro
- * tabelas recebem os dados, ou nenhuma recebe.
+ * tabelas recebem os dados e o estoque dos produtos é abatido, ou nada disso acontece.
  */
 public class PedidoRepositorioJdbc implements PedidoRepositorio {
 
@@ -55,7 +56,8 @@ public class PedidoRepositorioJdbc implements PedidoRepositorio {
     // ==================================================================
 
     @Override
-    public Pedido salvar(Pedido pedido, Pagamento pagamento) throws PersistenciaException, AssentoIndisponivelException {
+    public Pedido salvar(Pedido pedido, Pagamento pagamento)
+            throws PersistenciaException, AssentoIndisponivelException, EstoqueInsuficienteException {
         if (pedido == null || pagamento == null) {
             throw new IllegalArgumentException("O pedido e o pagamento são obrigatórios!");
         }
@@ -70,7 +72,8 @@ public class PedidoRepositorioJdbc implements PedidoRepositorio {
                 int pedidoId = inserirPedido(con, pedido);
 
                 for (ItemPedido item : pedido.getItens()) {
-                    inserirItem(con, pedidoId, item);
+                    abaterEstoque(con, item);            // 1º: baixa (se faltar estoque, nada é gravado)
+                    inserirItem(con, pedidoId, item);    // 2º: registra o item
                 }
                 List<Ingresso> gravados = new ArrayList<>();
                 for (Ingresso ingresso : pedido.getIngressos()) {
@@ -81,7 +84,8 @@ public class PedidoRepositorioJdbc implements PedidoRepositorio {
                 con.commit(); // chegou aqui sem erro: confirma tudo de uma vez
                 return Pedido.restaurar(pedidoId, pedido.getCliente(), pedido.getData(), pedido.getStatus(),
                         pedido.getItens(), gravados);
-            } catch (SQLException | PersistenciaException | AssentoIndisponivelException | RuntimeException e) {
+            } catch (SQLException | PersistenciaException | AssentoIndisponivelException
+                     | EstoqueInsuficienteException | RuntimeException e) {
                 con.rollback(); // qualquer erro: desfaz TUDO o que foi inserido acima
                 throw e;
             }
@@ -111,6 +115,41 @@ public class PedidoRepositorioJdbc implements PedidoRepositorio {
             ps.setString(3, pedido.getStatus().name());     // enum como texto
             ps.executeUpdate();
             return lerIdGerado(ps, "pedido");
+        }
+    }
+
+    /**
+     * Abate do estoque a quantidade do item, em um único UPDATE que já confere se há unidades
+     * suficientes (WHERE estoque >= ?). Conferir e abater na mesma instrução é o que impede
+     * duas janelas de venderem a mesma última unidade: o banco executa uma de cada vez.
+     * Se nenhuma linha for atualizada, ou o produto não existe, ou não há estoque suficiente.
+     */
+    private void abaterEstoque(Connection con, ItemPedido item)
+            throws SQLException, PersistenciaException, EstoqueInsuficienteException {
+        Produto produto = item.getProduto();
+        if (produto.getId() <= 0) {
+            throw new PersistenciaException("O produto \"" + produto.getNome() + "\" ainda não foi gravado no banco.");
+        }
+        String sql = "UPDATE produto SET estoque = estoque - ? WHERE id = ? AND estoque >= ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, item.getQuantidade());
+            ps.setInt(2, produto.getId());
+            ps.setInt(3, item.getQuantidade());
+            if (ps.executeUpdate() > 0) {
+                return; // baixa feita
+            }
+        }
+
+        // nenhuma linha mudou: descobre o motivo para dar uma mensagem útil
+        try (PreparedStatement ps = con.prepareStatement("SELECT nome, estoque FROM produto WHERE id = ?")) {
+            ps.setInt(1, produto.getId());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new PersistenciaException("O produto \"" + produto.getNome() + "\" não existe no banco.");
+                }
+                throw new EstoqueInsuficienteException("Estoque insuficiente de \"" + rs.getString("nome")
+                        + "\": restam " + rs.getInt("estoque") + " e o pedido pede " + item.getQuantidade() + ".");
+            }
         }
     }
 
