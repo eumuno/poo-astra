@@ -10,6 +10,7 @@ import astra.servico.VendaService;
 import astra.servico.pagamento.FormaPagamento;
 import astra.servico.pagamento.FormaPagamentoCartao;
 import astra.servico.pagamento.FormaPagamentoPix;
+import astra.interfacegrafica.TemaAstra;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -47,6 +48,8 @@ public class Main {
         // inicia a GUI d forma segura
         SwingUtilities.invokeLater(() -> {
             AstraFrame tela = new AstraFrame(filmeService, produtoService, sessaoService, vendaService, usuarios); // cria janela
+            TemaAstra.instalar();
+
             tela.setVisible(true); // dx janela visível
         });
 
