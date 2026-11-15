@@ -47,8 +47,8 @@ public class Main {
 
         // inicia a GUI d forma segura
         SwingUtilities.invokeLater(() -> {
-            AstraFrame tela = new AstraFrame(filmeService, produtoService, sessaoService, vendaService, usuarios); // cria janela
             TemaAstra.instalar();
+            AstraFrame tela = new AstraFrame(filmeService, produtoService, sessaoService, vendaService, usuarios, pedidos, ingressos); // cria janela
 
             tela.setVisible(true); // dx janela visível
         });
