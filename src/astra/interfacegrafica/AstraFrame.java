@@ -1,93 +1,227 @@
 package astra.interfacegrafica;
 
-import astra.excecoes.PersistenciaException;
-import astra.modelo.Administrador;
-import astra.modelo.Cliente;
-import astra.modelo.Usuario;
-import astra.persistencia.UsuarioRepositorio;
-import astra.servico.FilmeService;
-import astra.servico.ProdutoService;
-import astra.servico.SessaoService;
-import astra.servico.VendaService;
+import astra.modelo.*;
+import astra.persistencia.*;
+import astra.servico.*;
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.ExecutionException;
 
+/** Entrada e autenticação do Cinema Astra, com credenciais reais do SQLite. */
 public class AstraFrame extends JFrame {
-
-    // SERVIÇOS MONTADOS NO Main (com os repositórios JDBC)
-    private final FilmeService filmeService;
-    private final ProdutoService produtoService;
-    private final SessaoService sessaoService;
-    private final VendaService vendaService;
+    private final FilmeService filmes;
+    private final ProdutoService produtos;
+    private final SessaoService sessoes;
+    private final VendaService vendas;
     private final UsuarioRepositorio usuarios;
+    private final PedidoRepositorio pedidos;
+    private final IngressoRepositorio ingressos;
 
-    // COMPONENTES DA TELA
-    private final JLabel textoBoasVindas = new JLabel("Bem-vindo(a) ao Sistema do Astra", SwingConstants.CENTER);
-    private final JButton botaoCliente =  new JButton("Entrar como Cliente");
-    private final JButton botaoAdmin = new JButton("Entrar como Administrador");
-
-    // CONSTRUTOR DA JANELA
-    public AstraFrame(FilmeService filmeService, ProdutoService produtoService, SessaoService sessaoService,
-                      VendaService vendaService, UsuarioRepositorio usuarios) {
-        this.filmeService = filmeService;
-        this.produtoService = produtoService;
-        this.sessaoService = sessaoService;
-        this.vendaService = vendaService;
-        this.usuarios = usuarios;
-        mostrarTela();
-        configurarEventos();
+    public AstraFrame(FilmeService filmes, ProdutoService produtos, SessaoService sessoes,
+                      VendaService vendas, UsuarioRepositorio usuarios,
+                      PedidoRepositorio pedidos, IngressoRepositorio ingressos) {
+        this.filmes = filmes; this.produtos = produtos; this.sessoes = sessoes;
+        this.vendas = vendas; this.usuarios = usuarios;
+        this.pedidos = pedidos; this.ingressos = ingressos;
+        TemaAstra.configurarJanela(this, "Boas-vindas", 1050, 720);
+        setMinimumSize(new Dimension(980, 700));
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        mostrarInicio();
     }
 
-    private void mostrarTela() {
-        setTitle("Astra — Início"); // título da interface
-        setDefaultCloseOperation(EXIT_ON_CLOSE); // encerra o programa ao fechar no x
-        setSize(400, 200); // tamanho da tela
-        setLocationRelativeTo(null); // centraliza a janela na tela
-        setLayout(new BorderLayout(8, 8)); // layout principal
-        textoBoasVindas.setFont(new Font("Arial", Font.BOLD, 16));
-        add(textoBoasVindas, BorderLayout.NORTH); // add componentes na janela
+    /** Tela de entrada com composição clara, sem dados duplicados ou lógica de venda. */
+    private void mostrarInicio() {
+        JPanel raiz = new JPanel(new BorderLayout());
+        raiz.setBackground(TemaAstra.FUNDO);
+        raiz.setBorder(BorderFactory.createEmptyBorder(0, 0, 22, 0));
+        raiz.add(TemaAstra.cabecalho("Bem-vindo ao cinema", "ESCOLHA SEU ACESSO"), BorderLayout.NORTH);
 
-        // organizar os botões lado a lado
-        JPanel painelBotoes = new JPanel();
-        painelBotoes.add(botaoCliente);
-        painelBotoes.add(botaoAdmin);
-        add(painelBotoes, BorderLayout.CENTER);
+        JPanel centro = new JPanel(new GridBagLayout());
+        centro.setBackground(TemaAstra.FUNDO);
+        centro.setBorder(BorderFactory.createEmptyBorder(26, 36, 20, 36));
+        JPanel mensagem = new JPanel();
+        mensagem.setOpaque(false);
+        mensagem.setLayout(new BoxLayout(mensagem, BoxLayout.Y_AXIS));
+        mensagem.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 40));
+        JLabel etiqueta = TemaAstra.destaque("SEU INGRESSO PARA UMA BOA HISTÓRIA");
+        etiqueta.setForeground(TemaAstra.SUAVE);
+        etiqueta.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        JLabel nome = new JLabel("Cinema ASTRA");
+        nome.setFont(new Font("Segoe UI", Font.BOLD, 48));
+        nome.setForeground(TemaAstra.TEXTO);
+        JLabel frase = new JLabel("O cinema começa aqui.");
+        frase.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        frase.setForeground(new Color(194, 151, 255));
+        JLabel detalhe = new JLabel("<html>Explore as sessões, escolha sua poltrona<br>e aproveite sua experiência no cinema.</html>");
+        detalhe.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        detalhe.setForeground(TemaAstra.SUAVE);
+        mensagem.add(Box.createVerticalGlue());
+        mensagem.add(etiqueta); mensagem.add(Box.createVerticalStrut(20));
+        mensagem.add(nome); mensagem.add(Box.createVerticalStrut(13));
+        mensagem.add(frase); mensagem.add(Box.createVerticalStrut(23));
+        mensagem.add(detalhe); mensagem.add(Box.createVerticalStrut(34));
+        mensagem.add(TemaAstra.rotulo("SESSÕES   •   INGRESSOS   •   BOMBONIERE"));
+        mensagem.add(Box.createVerticalGlue());
+
+        JPanel acesso = TemaAstra.painel();
+        acesso.setLayout(new BoxLayout(acesso, BoxLayout.Y_AXIS));
+        JLabel chamada = TemaAstra.titulo("Como deseja entrar?");
+        JLabel subtitulo = TemaAstra.rotulo("Escolha o perfil para continuar.");
+        chamada.setAlignmentX(Component.LEFT_ALIGNMENT);
+        subtitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JButton cliente = TemaAstra.botao("Continuar como cliente");
+        JButton admin = TemaAstra.botaoSecundario("Administrador");
+        cliente.setAlignmentX(Component.LEFT_ALIGNMENT);
+        admin.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cliente.setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
+        admin.setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
+        JLabel infoCliente = TemaAstra.rotulo("Consulte filmes, compre ingressos e acompanhe pedidos.");
+        JLabel infoAdmin = TemaAstra.rotulo("Gerencie sessões, produtos e pedidos.");
+        infoCliente.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        infoAdmin.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        infoCliente.setAlignmentX(Component.LEFT_ALIGNMENT);
+        infoAdmin.setAlignmentX(Component.LEFT_ALIGNMENT);
+        acesso.add(chamada); acesso.add(Box.createVerticalStrut(10));
+        acesso.add(subtitulo); acesso.add(Box.createVerticalStrut(34));
+        acesso.add(cliente); acesso.add(Box.createVerticalStrut(8));
+        acesso.add(infoCliente); acesso.add(Box.createVerticalStrut(27));
+        acesso.add(admin); acesso.add(Box.createVerticalStrut(8));
+        acesso.add(infoAdmin);
+
+        GridBagConstraints esq = new GridBagConstraints();
+        esq.gridx = 0; esq.gridy = 0; esq.weightx = 1; esq.weighty = 1;
+        esq.fill = GridBagConstraints.BOTH;
+        esq.insets = new Insets(0, 0, 0, 12);
+        centro.add(mensagem, esq);
+        GridBagConstraints dir = new GridBagConstraints();
+        dir.gridx = 1; dir.gridy = 0; dir.weightx = 1; dir.weighty = 0.6;
+        dir.fill = GridBagConstraints.HORIZONTAL;
+        dir.insets = new Insets(0, 12, 0, 0);
+        centro.add(acesso, dir);
+
+        cliente.addActionListener(e -> mostrarLogin(false));
+        admin.addActionListener(e -> mostrarLogin(true));
+        raiz.add(centro, BorderLayout.CENTER);
+        JLabel rodape = TemaAstra.rotulo("ASTRA  /  UMA EXPERIÊNCIA PARA TODOS");
+        rodape.setHorizontalAlignment(SwingConstants.CENTER);
+        rodape.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        raiz.add(rodape, BorderLayout.SOUTH);
+        setContentPane(raiz);
+        getRootPane().setDefaultButton(cliente);
+        revalidate(); repaint();
     }
 
-    private void configurarEventos() {
-        // evento do botao cliente
-        botaoCliente.addActionListener(evento -> {
-            Usuario usuario = buscarUsuario("cliente@email.com");
-            if (usuario instanceof Cliente cliente) {
-                new TelaCliente(cliente, produtoService, sessaoService, vendaService).setVisible(true); // abre tela do cliente
-            } else if (usuario != null) {
-                mostrarErro("O cliente de demonstração não foi encontrado no banco.");
-            }
-        });
-
-        // evento do botao admin
-        botaoAdmin.addActionListener(evento -> {
-            Usuario usuario = buscarUsuario("admin@astra");
-            if (usuario instanceof Administrador admin) {
-                new TelaAdmin(admin, filmeService, produtoService, sessaoService).setVisible(true);
-            } else if (usuario != null) {
-                mostrarErro("O administrador de demonstração não foi encontrado no banco.");
-            }
-        });
-    }
-
-    // BUSCA O USUÁRIO DO SEED NO BANCO (ainda não há tela de login)
-    private Usuario buscarUsuario(String email) {
-        try {
-            return usuarios.buscarPorEmail(email).orElse(null);
-        } catch (PersistenciaException e) {
-            mostrarErro(e.getMessage());
-            return null;
+    private void mostrarLogin(boolean administrador) {
+        JPanel form = TemaAstra.formulario();
+        JTextField email = TemaAstra.campo(24);
+        JPasswordField senha = TemaAstra.senha(24);
+        TemaAstra.linha(form, 0, "E-mail", email);
+        TemaAstra.linha(form, 1, "Senha", senha);
+        JButton voltar = TemaAstra.botaoSecundario("Voltar");
+        JButton entrar = TemaAstra.botao("Entrar");
+        TemaAstra.acoes(form, 2, voltar, entrar);
+        if (!administrador) {
+            JButton cadastro = TemaAstra.botaoSecundario("Criar minha conta");
+            TemaAstra.acoes(form, 3, cadastro);
+            cadastro.addActionListener(e -> mostrarCadastro());
         }
+        voltar.addActionListener(e -> mostrarInicio());
+        entrar.addActionListener(e -> autenticar(email.getText().trim(),
+                new String(senha.getPassword()), administrador, entrar, email, senha));
+        senha.addActionListener(e -> entrar.doClick());
+        setContentPane(TemaAstra.paginaFormulario(administrador ? "Acesso do administrador" : "Acesse sua conta", form, 540));
+        getRootPane().setDefaultButton(entrar);
+        revalidate(); repaint();
+        SwingUtilities.invokeLater(email::requestFocusInWindow);
     }
 
-    private void mostrarErro(String mensagem) {
-        JOptionPane.showMessageDialog(this, mensagem, "Erro", JOptionPane.ERROR_MESSAGE);
+    private void autenticar(String email, String senha, boolean admin, JButton botao,
+                            JTextField emailCampo, JPasswordField senhaCampo) {
+        if (email.isBlank() || senha.isBlank()) {
+            TemaAstra.erro(this, "Preencha e-mail e senha.");
+            (email.isBlank() ? emailCampo : senhaCampo).requestFocusInWindow();
+            return;
+        }
+        botao.setEnabled(false);
+        new SwingWorker<Usuario, Void>() {
+            @Override protected Usuario doInBackground() throws Exception {
+                return usuarios.autenticar(email, senha).orElse(null);
+            }
+            @Override protected void done() {
+                botao.setEnabled(true);
+                try {
+                    Usuario usuario = get();
+                    if (usuario == null) {
+                        TemaAstra.erro(AstraFrame.this,
+                                "E-mail ou senha incorretos.");
+                        senhaCampo.setText(""); senhaCampo.requestFocusInWindow();
+                        return;
+                    }
+                    if (admin && !(usuario instanceof Administrador) || !admin && !(usuario instanceof Cliente)) {
+                        TemaAstra.erro(AstraFrame.this, "A conta existe, mas não pertence ao perfil selecionado.");
+                        return;
+                    }
+                    if (usuario instanceof Administrador a) {
+                        new TelaAdmin(a, filmes, produtos, sessoes, pedidos).setVisible(true);
+                    } else {
+                        new TelaCliente((Cliente) usuario, produtos, sessoes, vendas, ingressos, pedidos).setVisible(true);
+                    }
+                    // Evita várias janelas idênticas e mantém o caminho de retorno claro.
+                    dispose();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    TemaAstra.erro(AstraFrame.this, "A autenticação foi interrompida.");
+                } catch (ExecutionException ex) {
+                    Throwable causa = ex.getCause() == null ? ex : ex.getCause();
+                    TemaAstra.erro(AstraFrame.this, "Falha ao consultar o banco: " + causa.getMessage());
+                }
+            }
+        }.execute();
     }
 
+    private void mostrarCadastro() {
+        JPanel form = TemaAstra.formulario();
+        JTextField nome = TemaAstra.campo(24);
+        JTextField email = TemaAstra.campo(24);
+        JTextField cpf = TemaAstra.campo(24);
+        JPasswordField senha = TemaAstra.senha(24);
+        TemaAstra.linha(form, 0, "Nome completo", nome);
+        TemaAstra.linha(form, 1, "E-mail", email);
+        TemaAstra.linha(form, 2, "CPF (11 dígitos)", cpf);
+        TemaAstra.linha(form, 3, "Senha (mínimo de 6 caracteres)", senha);
+        JButton salvar = TemaAstra.botao("Criar conta");
+        JButton voltar = TemaAstra.botaoSecundario("Voltar");
+        TemaAstra.acoes(form, 4, voltar, salvar);
+        voltar.addActionListener(e -> mostrarLogin(false));
+        salvar.addActionListener(e -> {
+            String n = nome.getText().trim();
+            String em = email.getText().trim();
+            String cp = cpf.getText().replaceAll("\\D", "");
+            String s = new String(senha.getPassword());
+            if (n.isBlank() || !em.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$") || cp.length() != 11 || s.length() < 6) {
+                TemaAstra.erro(this, "Informe nome, e-mail válido, CPF com 11 dígitos e senha de 6 ou mais caracteres.");
+                return;
+            }
+            salvar.setEnabled(false);
+            new SwingWorker<Usuario, Void>() {
+                @Override protected Usuario doInBackground() throws Exception {
+                    return usuarios.salvar(new Cliente(0, n, em, "", cp), s);
+                }
+                @Override protected void done() {
+                    salvar.setEnabled(true);
+                    try {
+                        get();
+                        TemaAstra.sucesso(AstraFrame.this, "Conta criada! Agora entre com seu e-mail e senha.");
+                        mostrarLogin(false);
+                    } catch (Exception ex) {
+                        Throwable causa = ex.getCause() == null ? ex : ex.getCause();
+                        TemaAstra.erro(AstraFrame.this, "Não foi possível cadastrar: " + causa.getMessage());
+                    }
+                }
+            }.execute();
+        });
+        setContentPane(TemaAstra.paginaFormulario("Criar conta de cliente", form, 560));
+        revalidate(); repaint();
+        SwingUtilities.invokeLater(nome::requestFocusInWindow);
+    }
 }
