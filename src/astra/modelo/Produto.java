@@ -45,10 +45,13 @@ public class Produto {
 
     // Retira do estoque chamando o possuiEstoque
     public void retirarEstoque(int quantidade) {
-        if (possuiEstoque(quantidade)) {
-            this.estoque -= quantidade;
+        if (!possuiEstoque(quantidade)) {
+            throw new IllegalStateException("Estoque insuficiente de \"" + this.nome
+                    + "\": restam " + this.estoque + " e foram pedidas " + quantidade + ".");
         }
+        this.estoque -= quantidade;
     }
+
     // GETTERS E SETTERS
 
     public int getId() {
