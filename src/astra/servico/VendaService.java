@@ -1,6 +1,7 @@
 package astra.servico;
 import astra.excecoes.AssentoIndisponivelException;
 import astra.excecoes.EstoqueInsuficienteException;
+import astra.excecoes.IngressosEsgotadosException;
 import astra.excecoes.PagamentoException;
 import astra.excecoes.PersistenciaException;
 import astra.modelo.*;
@@ -42,22 +43,38 @@ public class VendaService {
         return new Pedido(0, cliente);
     }
 
-    public Ingresso venderIngresso (Pedido pedido, Sessao sessao, int numeroAssento, Ingresso.TipoIngresso tipo) throws AssentoIndisponivelException {
+    public Ingresso venderIngresso (Pedido pedido, Sessao sessao, int numeroAssento, Ingresso.TipoIngresso tipo) throws AssentoIndisponivelException, IngressosEsgotadosException {
         if(sessao == null){
             throw new IllegalArgumentException("Você precisa escolher uma sessão!");
         }
         if(!sessao.estaDisponivel()){
             throw new IllegalStateException("A sessão não está disponível para venda!");
         }
+        if(!sessao.possuiVagas()){
+            throw new IngressosEsgotadosException("Todos os assentos desta sessão já foram vendidos.");
+        }
         if(!sessao.assentoEstaDisponivel(numeroAssento)){
             throw new AssentoIndisponivelException("O assento " + numeroAssento + " está ocupado ou não existe.");
+        }
+        if(pedidoJaTemAssento(pedido, sessao, numeroAssento)){
+            throw new AssentoIndisponivelException("O assento " + numeroAssento + " já está no seu pedido.");
         }
 
         Assento assento = sessao.getSala().buscarAssento(numeroAssento);
         Ingresso ingresso = new Ingresso(0, sessao.getFilme(), sessao, assento, pedido.getCliente(), tipo);
-        pedido.adicionarIngresso(ingresso);
-        sessao.ocuparAssento(numeroAssento);
+        pedido.adicionarIngresso(ingresso); //o assento só é ocupado depois do pagamento aprovado
         return ingresso;
+    }
+
+    //Antes de pagar o assento ainda não está ocupado; por isso confere se o próprio pedido já o reservou
+    private boolean pedidoJaTemAssento(Pedido pedido, Sessao sessao, int numeroAssento) {
+        for (Ingresso existente : pedido.getIngressos()) {
+            if (existente.getSessao().getId() == sessao.getId()
+                    && existente.getAssento().getNumero() == numeroAssento) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void adicionarProduto(Pedido pedido, Produto produto, int quantidade){
@@ -83,7 +100,15 @@ public class VendaService {
         pagamento.processarPagamento();
         pedido.confirmarPagamento();
         pedidoRepositorio.salvar(pedido, pagamento); //transação: grava tudo ou nada
+        ocuparAssentosDoPedido(pedido);              //agora sim: pagou, os assentos ficam ocupados
         return pagamento;
+    }
+
+    //Marca na sessão (em memória) os assentos que acabaram de ser pagos e gravados
+    private void ocuparAssentosDoPedido(Pedido pedido) {
+        for (Ingresso ingresso : pedido.getIngressos()) {
+            ingresso.getSessao().ocuparAssento(ingresso.getAssento().getNumero());
+        }
     }
 
     //Pergunta ao banco (fonte da verdade) se há estoque para tudo que o pedido pede.
