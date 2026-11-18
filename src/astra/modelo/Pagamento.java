@@ -1,6 +1,7 @@
 package astra.modelo;
 
 import astra.excecoes.PagamentoException;
+import astra.excecoes.TransicaoStatusInvalidaException;
 import java.time.LocalDateTime;
 
 public abstract class Pagamento {
@@ -27,7 +28,7 @@ public abstract class Pagamento {
     // Só dá pra mudar o status se ainda estiver pendente
     protected void mudarStatus(Status novo) throws PagamentoException {
         if (status != Status.PENDENTE) {
-            throw new PagamentoException("Este pagamento já foi finalizado.");
+            throw new TransicaoStatusInvalidaException("Este pagamento já foi finalizado.");
         }
         status = novo;
     }
