@@ -5,9 +5,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Pedido de um {@link Cliente}: reúne os ingressos do cinema e os produtos da
+ * bomboniere e controla o ciclo de vida da compra
+ * (ABERTO, PAGO, PRONTO, RETIRADO ou CANCELADO).
+ *
+ * <p>Regras de negócio guardadas aqui: só um pedido aberto aceita ou remove itens e
+ * ingressos, e um pedido vazio não pode ser pago.</p>
+ */
 public class Pedido {
 
-    // ENUM para o ciclo de vida do pedido
+    /** Ciclo de vida do pedido. */
     public enum StatusPedido {
         ABERTO,
         PAGO,
@@ -25,6 +33,13 @@ public class Pedido {
     private StatusPedido status;
 
     // CONSTRUTOR (pedido novo: aberto, com a data de agora)
+    /**
+     * Cria um pedido novo, aberto e com a data de agora.
+     *
+     * @param id      identificador do pedido (0 enquanto ainda não foi gravado no banco)
+     * @param cliente cliente dono do pedido; não pode ser nulo
+     * @throws IllegalArgumentException se o cliente for nulo
+     */
     public Pedido(int id, Cliente cliente) {
         this(id, cliente, LocalDateTime.now(), StatusPedido.ABERTO);
     }
@@ -49,6 +64,15 @@ public class Pedido {
      * Reconstrói um pedido que já existe (ex: lido do banco), com o id, a data e o status
      * que ele tinha. Não passa por validarPedidoAberto(), porque um pedido PAGO não aceitaria
      * adicionar itens pelos métodos normais. Usado só para restaurar dados já gravados.
+     *
+     * @param id        identificador gravado no banco
+     * @param cliente   cliente dono do pedido; não pode ser nulo
+     * @param data      data em que o pedido foi criado; não pode ser nula
+     * @param status    status que o pedido tinha; não pode ser nulo
+     * @param itens     produtos do pedido (pode ser nulo, e então fica vazio)
+     * @param ingressos ingressos do pedido (pode ser nulo, e então fica vazio)
+     * @return o pedido restaurado
+     * @throws IllegalArgumentException se o cliente, a data ou o status forem nulos
      */
     public static Pedido restaurar(int id, Cliente cliente, LocalDateTime data, StatusPedido status,
                                    List<ItemPedido> itens, List<Ingresso> ingressos) {
@@ -63,12 +87,27 @@ public class Pedido {
     }
 
     // METODOS BOMBONIERE
+    /**
+     * Adiciona um produto da bomboniere ao pedido, usando o preço atual do produto.
+     *
+     * @param produto    produto escolhido; não pode ser nulo
+     * @param quantidade número de unidades; deve ser no mínimo 1
+     * @throws IllegalStateException    se o pedido não estiver mais aberto
+     * @throws IllegalArgumentException se o produto for nulo ou a quantidade for menor que 1
+     */
     public void adicionarItem(Produto produto, int quantidade) {
         validarPedidoAberto();
         ItemPedido novoItem = new ItemPedido(produto, quantidade);
         this.itens.add(novoItem);
     }
 
+    /**
+     * Adiciona um item já montado ao pedido.
+     *
+     * @param item item a adicionar; não pode ser nulo
+     * @throws IllegalStateException    se o pedido não estiver mais aberto
+     * @throws IllegalArgumentException se o item for nulo
+     */
     public void adicionarItem(ItemPedido item) {
         validarPedidoAberto();
         if (item == null) {
@@ -77,12 +116,25 @@ public class Pedido {
         this.itens.add(item);
     }
 
+    /**
+     * Remove um item do pedido.
+     *
+     * @param item item a remover
+     * @throws IllegalStateException se o pedido não estiver mais aberto
+     */
     public void removerItem(ItemPedido item) {
         validarPedidoAberto();
         this.itens.remove(item);
     }
 
     // METODOS INGRESSOS
+    /**
+     * Adiciona um ingresso ao pedido.
+     *
+     * @param ingresso ingresso a adicionar; não pode ser nulo
+     * @throws IllegalStateException    se o pedido não estiver mais aberto
+     * @throws IllegalArgumentException se o ingresso for nulo
+     */
     public void adicionarIngresso(Ingresso ingresso) {
         validarPedidoAberto();
         if (ingresso == null) {
@@ -91,12 +143,23 @@ public class Pedido {
         this.ingressos.add(ingresso);
     }
 
+    /**
+     * Remove um ingresso do pedido.
+     *
+     * @param ingresso ingresso a remover
+     * @throws IllegalStateException se o pedido não estiver mais aberto
+     */
     public void removerIngresso(Ingresso ingresso) {
         validarPedidoAberto();
         this.ingressos.remove(ingresso);
     }
 
     // REGRAS DE NEGOCIO E CALCULOS
+    /**
+     * Calcula o total do pedido: soma dos subtotais dos produtos e dos preços dos ingressos.
+     *
+     * @return o valor total a pagar
+     */
     public double calcularTotal() {
         double totalItens = 0.0;
         for (ItemPedido item : this.itens) {
@@ -111,11 +174,21 @@ public class Pedido {
         return totalItens + totalIngressos;
     }
 
+    /**
+     * Informa se o pedido não tem nenhum produto nem ingresso.
+     *
+     * @return {@code true} se não houver itens nem ingressos
+     */
     public boolean estaVazio(){
         return this.itens.isEmpty() && this.ingressos.isEmpty();
     }
 
-    //Fonte da regra "não se paga pedido vazio, assim não fica mais duplicada
+    /**
+     * Confere se o pedido pode ser pago. É a fonte da regra "não se paga pedido vazio",
+     * para que ela não fique duplicada em outros lugares.
+     *
+     * @throws IllegalStateException se o pedido não estiver aberto ou se estiver vazio
+     */
     public void validarPodeSerPago(){
         validarPedidoAberto();
         if(estaVazio()){
@@ -123,11 +196,21 @@ public class Pedido {
         }
     }
 
+    /**
+     * Confirma o pagamento: o pedido passa de ABERTO para PAGO.
+     *
+     * @throws IllegalStateException se o pedido não estiver aberto ou se estiver vazio
+     */
     public void confirmarPagamento(){
         validarPodeSerPago();
         this.status = StatusPedido.PAGO;
     }
 
+    /**
+     * Marca o pedido como pronto para retirada.
+     *
+     * @throws IllegalStateException se o pedido não estiver PAGO
+     */
     public void marcarComoPronto() {
         if (this.status != StatusPedido.PAGO) {
             throw new IllegalStateException("O pedido precisa estar pago antes de ser marcado como pronto.");
@@ -135,6 +218,11 @@ public class Pedido {
         this.status = StatusPedido.PRONTO;
     }
 
+    /**
+     * Registra a retirada do pedido pelo cliente.
+     *
+     * @throws IllegalStateException se o pedido não estiver PRONTO
+     */
     public void retirar() {
         if (this.status != StatusPedido.PRONTO) {
             throw new IllegalStateException("O pedido so pode ser retirado quando estiver pronto.");
@@ -142,6 +230,11 @@ public class Pedido {
         this.status = StatusPedido.RETIRADO;
     }
 
+    /**
+     * Cancela o pedido. Pedidos já pagos ou finalizados não podem ser cancelados por aqui.
+     *
+     * @throws IllegalStateException se o pedido estiver PAGO, PRONTO ou RETIRADO
+     */
     public void cancelar() {
         if (this.status == StatusPedido.PAGO || this.status == StatusPedido.PRONTO || this.status == StatusPedido.RETIRADO) {
             throw new IllegalStateException("Pedidos pagos ou finalizados nao podem ser cancelados diretamente.");
@@ -156,26 +249,32 @@ public class Pedido {
     }
 
     // GETTERS
+    /** @return o identificador do pedido (0 se ainda não foi gravado no banco) */
     public int getId() {
         return id;
     }
 
+    /** @return o cliente dono do pedido */
     public Cliente getCliente() {
         return cliente;
     }
 
+    /** @return a data e hora em que o pedido foi criado */
     public LocalDateTime getData() {
         return data;
     }
 
+    /** @return o status atual do pedido */
     public StatusPedido getStatus() {
         return status;
     }
 
+    /** @return a lista dos produtos do pedido, somente para leitura */
     public List<ItemPedido> getItens() {
         return Collections.unmodifiableList(itens);
     }
 
+    /** @return a lista dos ingressos do pedido, somente para leitura */
     public List<Ingresso> getIngressos() {
         return Collections.unmodifiableList(ingressos);
     }
