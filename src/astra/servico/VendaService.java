@@ -9,6 +9,7 @@ import astra.persistencia.IngressoRepositorio;
 import astra.persistencia.PedidoRepositorio;
 import astra.persistencia.ProdutoRepositorio;
 import astra.servico.pagamento.FormaPagamento;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,6 +29,7 @@ public class VendaService {
     private final PedidoRepositorio pedidoRepositorio;     //interface: grava a venda
     private final IngressoRepositorio ingressoRepositorio; //interface: consulta assentos vendidos
     private final ProdutoRepositorio produtoRepositorio;   //interface: consulta o estoque atual
+    private final TrilhaDeAuditoria trilha;                //registra compras concluídas e vendas desfeitas
 
     /**
      * Cria o serviço de venda.
@@ -36,20 +38,23 @@ public class VendaService {
      * @param pedidoRepositorio   onde a venda é gravada
      * @param ingressoRepositorio de onde se consulta quais poltronas já foram vendidas
      * @param produtoRepositorio  de onde se consulta o estoque atual
-     * @throws IllegalArgumentException se faltar alguma forma de pagamento ou algum repositório
+     * @param trilha              onde as compras concluídas e as vendas desfeitas são registradas
+     * @throws IllegalArgumentException se faltar alguma forma de pagamento, algum repositório ou a trilha
      */
     public VendaService(List<FormaPagamento> formasPagamento, PedidoRepositorio pedidoRepositorio,
-                        IngressoRepositorio ingressoRepositorio, ProdutoRepositorio produtoRepositorio) {
+                        IngressoRepositorio ingressoRepositorio, ProdutoRepositorio produtoRepositorio,
+                        TrilhaDeAuditoria trilha) {
         if (formasPagamento == null || formasPagamento.isEmpty()) {
             throw new IllegalArgumentException("Informe pelo menos uma forma de pagamento.");
         }
-        if (pedidoRepositorio == null || ingressoRepositorio == null || produtoRepositorio == null) {
-            throw new IllegalArgumentException("Os repositórios de pedido, de ingresso e de produto são obrigatórios.");
+        if (pedidoRepositorio == null || ingressoRepositorio == null || produtoRepositorio == null || trilha == null) {
+            throw new IllegalArgumentException("Os repositórios de pedido, de ingresso e de produto e a trilha de auditoria são obrigatórios.");
         }
         this.formasPagamento = List.copyOf(formasPagamento);
         this.pedidoRepositorio = pedidoRepositorio;
         this.ingressoRepositorio = ingressoRepositorio;
         this.produtoRepositorio = produtoRepositorio;
+        this.trilha = trilha;
     }
 
     /**
@@ -148,6 +153,60 @@ public class VendaService {
     }
 
     /**
+     * Troca a quantidade de um produto que já está no carrinho. O item mantém a posição na lista e o preço
+     * unitário de quando foi colocado no carrinho. Para aumentar, confere no banco se há estoque para o total
+     * do produto no pedido (somando outros itens do mesmo produto).
+     *
+     * @param pedido         pedido aberto
+     * @param item           item do carrinho que será alterado
+     * @param novaQuantidade nova quantidade (pelo menos 1; para tirar o produto, remova o item)
+     * @return o item novo, que passa a ocupar o lugar do antigo
+     * @throws EstoqueInsuficienteException se não houver estoque para a quantidade pedida
+     * @throws PersistenciaException        se o banco falhar ao consultar o estoque
+     * @throws IllegalArgumentException     se o item não estiver no pedido ou a quantidade for menor que 1
+     * @throws IllegalStateException        se o pedido não estiver mais aberto
+     */
+    public ItemPedido alterarQuantidade(Pedido pedido, ItemPedido item, int novaQuantidade)
+            throws EstoqueInsuficienteException, PersistenciaException {
+        if (item == null || !pedido.getItens().contains(item)) {
+            throw new IllegalArgumentException("Esse produto não está no carrinho.");
+        }
+        if (novaQuantidade < 1) {
+            throw new IllegalArgumentException("A quantidade deve ser de pelo menos 1. Para tirar o produto, use Remover.");
+        }
+        if (novaQuantidade > item.getQuantidade()) {
+            conferirEstoqueParaAumento(pedido, item, novaQuantidade);
+        }
+        ItemPedido novo = new ItemPedido(item.getProduto(), novaQuantidade, item.getPrecoUnitario());
+        // A lista de itens só aceita adicionar no fim: tira todos e recoloca na mesma ordem, trocando o alterado
+        List<ItemPedido> atuais = new ArrayList<>(pedido.getItens());
+        for (ItemPedido existente : atuais) {
+            pedido.removerItem(existente);
+        }
+        for (ItemPedido existente : atuais) {
+            pedido.adicionarItem(existente == item ? novo : existente);
+        }
+        return novo;
+    }
+
+    //Total do produto no pedido (os outros itens dele + a nova quantidade) contra o estoque que está no banco agora
+    private void conferirEstoqueParaAumento(Pedido pedido, ItemPedido item, int novaQuantidade)
+            throws EstoqueInsuficienteException, PersistenciaException {
+        int idDoProduto = item.getProduto().getId();
+        int total = novaQuantidade;
+        for (ItemPedido outro : pedido.getItens()) {
+            if (outro != item && outro.getProduto().getId() == idDoProduto) {
+                total += outro.getQuantidade();
+            }
+        }
+        Produto atual = produtoRepositorio.buscarPorId(idDoProduto).orElseThrow(() ->
+                new PersistenciaException("Esse produto não existe mais no banco."));
+        if (!atual.possuiEstoque(total)) {
+            throw new EstoqueInsuficienteException(atual.getNome(), atual.getEstoque(), total);
+        }
+    }
+
+    /**
      * Formas de pagamento oferecidas ao cliente.
      *
      * @return a lista (somente leitura) de formas de pagamento
@@ -182,14 +241,19 @@ public class VendaService {
         Pagamento pagamento = forma.criarPagamento(pedido.calcularTotal(), pedido.getCliente());
         pagamento.processarPagamento();  //se for recusado, lança aqui e o pedido nem chega a mudar
         pedido.confirmarPagamento();
+        Pedido gravado;
         try {
-            pedidoRepositorio.salvar(pedido, pagamento); //transação: grava tudo ou nada
+            gravado = pedidoRepositorio.salvar(pedido, pagamento); //transação: grava tudo ou nada
         } catch (PersistenciaException | AssentoIndisponivelException
                  | EstoqueInsuficienteException | RuntimeException e) {
             desfazerVenda(pedido, pagamento); //nada foi gravado: volta tudo como estava antes de pagar
+            trilha.registrar(pedido.getCliente().getId(), TrilhaDeAuditoria.VENDA_DESFEITA,
+                    "pagamento estornado, motivo=" + e.getClass().getSimpleName());
             throw e;                          //a tela continua recebendo a exceção original para explicar o motivo
         }
         ocuparAssentosDoPedido(pedido);              //agora sim: pagou e gravou, os assentos ficam ocupados
+        trilha.registrar(pedido.getCliente().getId(), TrilhaDeAuditoria.COMPRA_CONCLUIDA,
+                "pedido=" + gravado.getId() + " total=" + pagamento.getValor() + " forma=" + pagamento.getForma());
         return pagamento;
     }
 

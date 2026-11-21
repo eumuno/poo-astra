@@ -8,20 +8,37 @@ import java.util.List;
 /**
  * Casos de uso da bomboniere: cadastrar, editar, repor estoque e listar produtos.
  *
- * O estoque tem dois caminhos separados e propositais: a venda o diminui (dentro da transação do
- * pedido) e {@link #reporEstoque} o aumenta. Editar os dados de um produto nunca mexe nele.
+ * <p>O estoque tem dois caminhos separados e propositais: a venda o diminui (dentro da transação do
+ * pedido) e {@link #reporEstoque} o aumenta. Editar os dados de um produto nunca mexe nele. Só administradores
+ * alteram a bomboniere (conferido no banco por {@link ControleDeAcesso}) e cada alteração entra na trilha de
+ * auditoria.</p>
  */
 public class ProdutoService {
 
+    /** Tamanho máximo do nome do produto, em caracteres. */
+    public static final int LIMITE_NOME = 100;
+    /** Tamanho máximo da descrição do produto, em caracteres. */
+    public static final int LIMITE_DESCRICAO = 300;
+    /** Estoque inicial máximo de um produto novo. */
+    public static final int LIMITE_ESTOQUE_INICIAL = 100_000;
+    /** Máximo de unidades que podem ser repostas de uma vez. */
+    public static final int LIMITE_DE_REPOSICAO = 100_000;
+
     private final ProdutoRepositorio repositorio;
+    private final ControleDeAcesso acesso;
+    private final TrilhaDeAuditoria trilha;
 
     /**
      * Cria o serviço sobre o repositório de produtos recebido.
      *
      * @param repositorio onde os produtos são lidos e gravados
+     * @param acesso      confere se quem altera é administrador
+     * @param trilha      onde as alterações são registradas
      */
-    public ProdutoService(ProdutoRepositorio repositorio){
+    public ProdutoService(ProdutoRepositorio repositorio, ControleDeAcesso acesso, TrilhaDeAuditoria trilha){
         this.repositorio = repositorio;
+        this.acesso = acesso;
+        this.trilha = trilha;
     }
 
     /**
@@ -31,20 +48,28 @@ public class ProdutoService {
      * @param nome      nome do produto (obrigatório e único, sem diferenciar maiúsculas)
      * @param descricao descrição do produto (opcional)
      * @param preco     preço unitário (zero ou mais)
-     * @param estoque   quantidade inicial em estoque (zero ou mais)
+     * @param estoque   quantidade inicial em estoque (de zero ao limite)
      * @param categoria categoria do produto (obrigatória)
      * @return o produto gravado, com o id gerado pelo banco
-     * @throws IllegalArgumentException se algum dado for inválido ou já existir um produto com o mesmo nome
-     * @throws PersistenciaException    se o banco falhar
+     * @throws astra.excecoes.AcessoNegadoException se quem cadastra não for administrador
+     * @throws IllegalArgumentException             se algum dado for inválido ou já existir um produto com o mesmo nome
+     * @throws PersistenciaException                se o banco falhar
      */
     public Produto cadastrarProduto(Administrador admin, String nome, String descricao, double preco, int estoque,
                                     Produto.CategoriaProduto categoria) throws PersistenciaException {
-        validarDados(admin, nome, preco, categoria);
+        acesso.exigirAdministrador(admin);
+        validarDados(nome, descricao, preco, categoria);
         if (estoque < 0) {
             throw new IllegalArgumentException("O estoque não pode ser negativo.");
         }
+        if (estoque > LIMITE_ESTOQUE_INICIAL) {
+            throw new IllegalArgumentException("O estoque inicial deve ser de no máximo " + LIMITE_ESTOQUE_INICIAL + " unidades.");
+        }
         exigirNomeLivre(nome, 0);
-        return repositorio.salvar(new Produto(0, nome.trim(), textoOuVazio(descricao), preco, estoque, categoria));
+        Produto salvo = repositorio.salvar(new Produto(0, nome.trim(), textoOuVazio(descricao), preco, estoque, categoria));
+        trilha.registrar(admin.getId(), TrilhaDeAuditoria.PRODUTO_CRIADO,
+                "id=" + salvo.getId() + " nome=\"" + salvo.getNome() + "\" estoque=" + salvo.getEstoque());
+        return salvo;
     }
 
     /**
@@ -57,17 +82,22 @@ public class ProdutoService {
      * @param preco     novo preço unitário (zero ou mais)
      * @param categoria nova categoria (obrigatória)
      * @return o produto como ficou no banco, com o estoque atual
-     * @throws IllegalArgumentException se algum dado for inválido ou outro produto já tiver o mesmo nome
-     * @throws PersistenciaException    se o produto não existir ou o banco falhar
+     * @throws astra.excecoes.AcessoNegadoException se quem altera não for administrador
+     * @throws IllegalArgumentException             se algum dado for inválido ou outro produto já tiver o mesmo nome
+     * @throws PersistenciaException                se o produto não existir ou o banco falhar
      */
     public Produto atualizarProduto(Administrador admin, int produtoId, String nome, String descricao, double preco,
                                     Produto.CategoriaProduto categoria) throws PersistenciaException {
+        acesso.exigirAdministrador(admin);
         if (produtoId <= 0) {
             throw new IllegalArgumentException("Escolha um produto já cadastrado para editar.");
         }
-        validarDados(admin, nome, preco, categoria);
+        validarDados(nome, descricao, preco, categoria);
         exigirNomeLivre(nome, produtoId);
-        return repositorio.atualizarDados(new Produto(produtoId, nome.trim(), textoOuVazio(descricao), preco, 0, categoria));
+        Produto salvo = repositorio.atualizarDados(new Produto(produtoId, nome.trim(), textoOuVazio(descricao), preco, 0, categoria));
+        trilha.registrar(admin.getId(), TrilhaDeAuditoria.PRODUTO_EDITADO,
+                "id=" + salvo.getId() + " nome=\"" + salvo.getNome() + "\" preço=" + salvo.getPreco());
+        return salvo;
     }
 
     /**
@@ -75,19 +105,24 @@ public class ProdutoService {
      *
      * @param admin      administrador que está repondo (obrigatório)
      * @param produtoId  id do produto que recebeu as unidades
-     * @param quantidade unidades recebidas (maior que zero)
+     * @param quantidade unidades recebidas (de 1 ao limite de reposição)
      * @return o produto com o estoque atualizado
-     * @throws IllegalArgumentException se a quantidade não for positiva
-     * @throws PersistenciaException    se o produto não existir ou o banco falhar
+     * @throws astra.excecoes.AcessoNegadoException se quem repõe não for administrador
+     * @throws IllegalArgumentException             se a quantidade não estiver entre 1 e o limite
+     * @throws PersistenciaException                se o produto não existir ou o banco falhar
      */
     public Produto reporEstoque(Administrador admin, int produtoId, int quantidade) throws PersistenciaException {
-        if (admin == null) {
-            throw new IllegalArgumentException("Só um administrador pode repor estoque!");
-        }
+        acesso.exigirAdministrador(admin);
         if (quantidade <= 0) {
             throw new IllegalArgumentException("A quantidade a repor deve ser maior que zero.");
         }
-        return repositorio.adicionarEstoque(produtoId, quantidade);
+        if (quantidade > LIMITE_DE_REPOSICAO) {
+            throw new IllegalArgumentException("A reposição máxima por vez é de " + LIMITE_DE_REPOSICAO + " unidades.");
+        }
+        Produto salvo = repositorio.adicionarEstoque(produtoId, quantidade);
+        trilha.registrar(admin.getId(), TrilhaDeAuditoria.ESTOQUE_REPOSTO,
+                "id=" + salvo.getId() + " +" + quantidade + " unidades, estoque agora " + salvo.getEstoque());
+        return salvo;
     }
 
     /**
@@ -100,10 +135,7 @@ public class ProdutoService {
         return repositorio.listarTodos();
     }
 
-    private void validarDados(Administrador admin, String nome, double preco, Produto.CategoriaProduto categoria) {
-        if (admin == null) {
-            throw new IllegalArgumentException("Só um administrador pode gerenciar produtos!");
-        }
+    private void validarDados(String nome, String descricao, double preco, Produto.CategoriaProduto categoria) {
         if (nome == null || nome.isBlank()) {
             throw new IllegalArgumentException("O nome do produto é obrigatório.");
         }
@@ -113,6 +145,8 @@ public class ProdutoService {
         if (categoria == null) {
             throw new IllegalArgumentException("Escolha a categoria do produto.");
         }
+        Validacao.exigirNoMaximo(nome, LIMITE_NOME, "O nome do produto");
+        Validacao.exigirNoMaximo(descricao, LIMITE_DESCRICAO, "A descrição");
     }
 
     // Dois produtos com o mesmo nome (sem diferenciar maiúsculas) confundem o cliente na bomboniere

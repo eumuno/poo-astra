@@ -77,6 +77,19 @@ public interface CatalogoCliente {
     void adicionarProduto(Pedido pedido, Produto produto, int quantidade);
 
     /**
+     * Troca a quantidade de um produto que já está no carrinho.
+     *
+     * @param pedido         pedido aberto
+     * @param item           item do carrinho que será alterado
+     * @param novaQuantidade nova quantidade (pelo menos 1)
+     * @return o item novo, no lugar do antigo
+     * @throws EstoqueInsuficienteException se não houver estoque para a quantidade pedida
+     * @throws PersistenciaException        se o banco falhar
+     */
+    ItemPedido alterarQuantidade(Pedido pedido, ItemPedido item, int novaQuantidade)
+            throws EstoqueInsuficienteException, PersistenciaException;
+
+    /**
      * Formas de pagamento oferecidas.
      *
      * @return as formas de pagamento

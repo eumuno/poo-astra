@@ -14,20 +14,28 @@ import java.util.List;
 /**
  * Casos de uso das sessões: consultar (para o cliente e para o administrador), cadastrar, alterar e cancelar.
  *
- * Regra central da administração: uma sessão que já vendeu ingresso não é alterada nem cancelada,
- * porque o preço e o horário combinados com quem comprou não podem mudar depois da venda.
+ * <p>Regra central da administração: uma sessão que já vendeu ingresso não é alterada nem cancelada,
+ * porque o preço e o horário combinados com quem comprou não podem mudar depois da venda. Só administradores
+ * alteram sessões (conferido no banco por {@link ControleDeAcesso}) e cada alteração entra na trilha de
+ * auditoria.</p>
  */
 public class SessaoService {
 
     private final SessaoRepositorio repositorio;
+    private final ControleDeAcesso acesso;
+    private final TrilhaDeAuditoria trilha;
 
     /**
      * Cria o serviço sobre o repositório de sessões recebido.
      *
      * @param repositorio onde as sessões são lidas e gravadas
+     * @param acesso      confere se quem altera é administrador
+     * @param trilha      onde as alterações são registradas
      */
-    public SessaoService(SessaoRepositorio repositorio){
+    public SessaoService(SessaoRepositorio repositorio, ControleDeAcesso acesso, TrilhaDeAuditoria trilha){
         this.repositorio = repositorio;
+        this.acesso = acesso;
+        this.trilha = trilha;
     }
 
     /**
@@ -39,13 +47,17 @@ public class SessaoService {
      * @param dataHora   precisa estar no futuro
      * @param precoBase  valor do ingresso inteiro (a meia é metade)
      * @return a sessão gravada, com o id gerado pelo banco
-     * @throws IllegalArgumentException se algum dado for inválido ou o filme estiver inativo
-     * @throws PersistenciaException    se a sala não existir, se ela já tiver sessão nesse horário ou se o banco falhar
+     * @throws astra.excecoes.AcessoNegadoException se quem cadastra não for administrador
+     * @throws IllegalArgumentException             se algum dado for inválido ou o filme estiver inativo
+     * @throws PersistenciaException                se a sala não existir, se ela já tiver sessão nesse horário ou se o banco falhar
      */
     public Sessao cadastrarSessao(Administrador admin, Filme filme, int numeroSala, LocalDateTime dataHora,
                                   double precoBase) throws PersistenciaException {
-        validarDados(admin, filme, dataHora);
-        return repositorio.salvar(novaSessao(0, filme, numeroSala, dataHora, precoBase));
+        acesso.exigirAdministrador(admin);
+        validarDados(filme, dataHora);
+        Sessao salva = repositorio.salvar(novaSessao(0, filme, numeroSala, dataHora, precoBase));
+        trilha.registrar(admin.getId(), TrilhaDeAuditoria.SESSAO_CRIADA, descrever(salva));
+        return salva;
     }
 
     /**
@@ -58,15 +70,19 @@ public class SessaoService {
      * @param dataHora   nova data e hora (precisa estar no futuro)
      * @param precoBase  novo valor do ingresso inteiro
      * @return a sessão com os dados novos
-     * @throws IllegalArgumentException se algum dado for inválido, o filme estiver inativo ou a sessão não existir
-     * @throws IllegalStateException    se a sessão não estiver agendada ou já tiver ingressos vendidos
-     * @throws PersistenciaException    se a sala não existir, se ela já tiver outra sessão nesse horário ou se o banco falhar
+     * @throws astra.excecoes.AcessoNegadoException se quem altera não for administrador
+     * @throws IllegalArgumentException             se algum dado for inválido, o filme estiver inativo ou a sessão não existir
+     * @throws IllegalStateException                se a sessão não estiver agendada ou já tiver ingressos vendidos
+     * @throws PersistenciaException                se a sala não existir, se ela já tiver outra sessão nesse horário ou se o banco falhar
      */
     public Sessao atualizarSessao(Administrador admin, int sessaoId, Filme filme, int numeroSala,
                                   LocalDateTime dataHora, double precoBase) throws PersistenciaException {
-        validarDados(admin, filme, dataHora);
+        acesso.exigirAdministrador(admin);
+        validarDados(filme, dataHora);
         Sessao existente = buscarSessaoAlteravel(sessaoId, "alterada");
-        return repositorio.atualizar(novaSessao(existente.getId(), filme, numeroSala, dataHora, precoBase));
+        Sessao salva = repositorio.atualizar(novaSessao(existente.getId(), filme, numeroSala, dataHora, precoBase));
+        trilha.registrar(admin.getId(), TrilhaDeAuditoria.SESSAO_EDITADA, descrever(salva));
+        return salva;
     }
 
     /**
@@ -76,17 +92,18 @@ public class SessaoService {
      * @param admin    administrador que está cancelando (obrigatório)
      * @param sessaoId id da sessão que será cancelada
      * @return a sessão já cancelada
-     * @throws IllegalArgumentException se a sessão não existir
-     * @throws IllegalStateException    se a sessão já estiver cancelada ou tiver ingressos vendidos
-     * @throws PersistenciaException    se o banco falhar
+     * @throws astra.excecoes.AcessoNegadoException se quem cancela não for administrador
+     * @throws IllegalArgumentException             se a sessão não existir
+     * @throws IllegalStateException                se a sessão já estiver cancelada ou tiver ingressos vendidos
+     * @throws PersistenciaException                se o banco falhar
      */
     public Sessao cancelarSessao(Administrador admin, int sessaoId) throws PersistenciaException {
-        if (admin == null) {
-            throw new IllegalArgumentException("Só um administrador pode cancelar sessões!");
-        }
+        acesso.exigirAdministrador(admin);
         Sessao existente = buscarSessaoAlteravel(sessaoId, "cancelada");
         existente.cancelar();
-        return repositorio.atualizar(existente);
+        Sessao salva = repositorio.atualizar(existente);
+        trilha.registrar(admin.getId(), TrilhaDeAuditoria.SESSAO_CANCELADA, descrever(salva));
+        return salva;
     }
 
     /**
@@ -131,10 +148,7 @@ public class SessaoService {
         return vendidos;
     }
 
-    private void validarDados(Administrador admin, Filme filme, LocalDateTime dataHora) {
-        if (admin == null) {
-            throw new IllegalArgumentException("Só um administrador pode gerenciar sessões!");
-        }
+    private void validarDados(Filme filme, LocalDateTime dataHora) {
         if (filme == null) {
             throw new IllegalArgumentException("Escolha o filme da sessão.");
         }
@@ -165,5 +179,10 @@ public class SessaoService {
                     + " ingresso(s) vendido(s) e não pode ser " + acao + ".");
         }
         return existente;
+    }
+
+    private String descrever(Sessao sessao) {
+        return "id=" + sessao.getId() + " filme=\"" + sessao.getFilme().getTitulo() + "\" sala="
+                + sessao.getSala().getNumero() + " início=" + sessao.getDataHora() + " status=" + sessao.getStatus();
     }
 }
