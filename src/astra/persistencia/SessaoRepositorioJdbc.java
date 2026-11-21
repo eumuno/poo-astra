@@ -73,6 +73,38 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
     }
 
     @Override
+    public Sessao atualizar(Sessao sessao) throws PersistenciaException {
+        if (sessao == null || sessao.getId() <= 0) {
+            throw new IllegalArgumentException("Só é possível atualizar uma sessão já gravada.");
+        }
+        if (sessao.getFilme().getId() <= 0) {
+            throw new PersistenciaException("Grave o filme antes de usá-lo em uma sessão.");
+        }
+        String sql = "UPDATE sessao SET filme_id = ?, sala_id = ?, data_hora = ?, status = ?, preco_base = ? WHERE id = ?";
+        try (Connection con = banco.abrirConexao()) {
+            int salaId = buscarIdDaSala(con, sessao.getSala().getNumero());
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setInt(1, sessao.getFilme().getId());
+                ps.setInt(2, salaId);
+                ps.setString(3, sessao.getDataHora().toString()); // ISO-8601
+                ps.setString(4, sessao.getStatus().name());
+                ps.setDouble(5, sessao.getPrecoBase());
+                ps.setInt(6, sessao.getId());
+                if (ps.executeUpdate() == 0) {
+                    throw new PersistenciaException("Não existe sessão com id " + sessao.getId() + " para atualizar.");
+                }
+                return sessao;
+            }
+        } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("UNIQUE")) {
+                throw new PersistenciaException("A sala " + sessao.getSala().getNumero()
+                        + " já tem uma sessão nesse horário.", e);
+            }
+            throw new PersistenciaException("Erro ao atualizar a sessão.", e);
+        }
+    }
+
+    @Override
     public List<Sessao> listarTodos() throws PersistenciaException {
         List<LinhaSessao> linhas = new ArrayList<>();
         String sql = "SELECT id, filme_id, sala_id, data_hora, status, preco_base FROM sessao ORDER BY data_hora, id";

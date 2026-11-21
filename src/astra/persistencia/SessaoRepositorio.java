@@ -18,6 +18,17 @@ public interface SessaoRepositorio {
      */
     Sessao salvar(Sessao sessao) throws PersistenciaException;
 
+    /**
+     * Atualiza uma sessão que já existe (filme, sala, data e hora, status e preço base).
+     * A regra de quando uma sessão pode ser alterada fica no serviço; aqui só se grava.
+     *
+     * @param sessao sessão com id maior que 0 e os dados novos
+     * @return a mesma sessão, já gravada
+     * @throws PersistenciaException se a sessão ou a sala não existirem, se a sala já tiver outra sessão no horário
+     *                               ou se o banco falhar
+     */
+    Sessao atualizar(Sessao sessao) throws PersistenciaException;
+
     /** Todas as sessões, em ordem de data e hora. */
     List<Sessao> listarTodos() throws PersistenciaException;
 

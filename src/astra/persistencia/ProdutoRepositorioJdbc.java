@@ -97,7 +97,61 @@ public class ProdutoRepositorioJdbc implements ProdutoRepositorio {
         }
     }
 
+    @Override
+    public Produto atualizarDados(Produto produto) throws PersistenciaException {
+        if (produto == null || produto.getId() <= 0) {
+            throw new IllegalArgumentException("Só é possível atualizar um produto já gravado.");
+        }
+        String sql = "UPDATE produto SET nome = ?, descricao = ?, preco = ?, categoria = ? WHERE id = ?";
+        try (Connection con = banco.abrirConexao();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, produto.getNome());
+            ps.setString(2, produto.getDescricao());
+            ps.setDouble(3, produto.getPreco());
+            ps.setString(4, produto.getCategoria().name());
+            ps.setInt(5, produto.getId());
+            if (ps.executeUpdate() == 0) {
+                throw new PersistenciaException("Não existe produto com id " + produto.getId() + " para atualizar.");
+            }
+            return lerProduto(con, produto.getId());
+        } catch (SQLException e) {
+            throw new PersistenciaException("Erro ao atualizar o produto \"" + produto.getNome() + "\".", e);
+        }
+    }
+
+    @Override
+    public Produto adicionarEstoque(int produtoId, int quantidade) throws PersistenciaException {
+        if (quantidade <= 0) {
+            throw new IllegalArgumentException("A quantidade a adicionar deve ser maior que zero.");
+        }
+        String sql = "UPDATE produto SET estoque = estoque + ? WHERE id = ?";
+        try (Connection con = banco.abrirConexao();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, quantidade);
+            ps.setInt(2, produtoId);
+            if (ps.executeUpdate() == 0) {
+                throw new PersistenciaException("Não existe produto com id " + produtoId + " para repor o estoque.");
+            }
+            return lerProduto(con, produtoId);
+        } catch (SQLException e) {
+            throw new PersistenciaException("Erro ao repor o estoque do produto " + produtoId + ".", e);
+        }
+    }
+
     // ------------------------------------------------------------------
+
+    /** Lê o produto na conexão já aberta (usado para devolver o estado final depois de um UPDATE). */
+    private Produto lerProduto(Connection con, int id) throws SQLException, PersistenciaException {
+        try (PreparedStatement ps = con.prepareStatement("SELECT " + COLUNAS + " FROM produto WHERE id = ?")) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new PersistenciaException("Não existe produto com id " + id + ".");
+                }
+                return mapear(rs);
+            }
+        }
+    }
 
     private void preencherDados(PreparedStatement ps, Produto produto) throws SQLException {
         ps.setString(1, produto.getNome());
