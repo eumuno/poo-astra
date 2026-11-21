@@ -6,10 +6,12 @@ import astra.persistencia.*;
 import astra.servico.AtendimentoCliente;
 import astra.servico.CatalogoCliente;
 import astra.servico.ContaService;
+import astra.servico.ControleDeAcesso;
 import astra.servico.FilmeService;
 import astra.servico.PedidoService;
 import astra.servico.ProdutoService;
 import astra.servico.SessaoService;
+import astra.servico.TrilhaDeAuditoria;
 import astra.servico.VendaService;
 import astra.servico.pagamento.FormaPagamento;
 import astra.servico.pagamento.FormaPagamentoCartao;
@@ -54,22 +56,27 @@ public class Main {
         UsuarioRepositorio usuarios = new UsuarioRepositorioJdbc(banco);
         IngressoRepositorio ingressos = new IngressoRepositorioJdbc(banco, sessoes, usuarios);
         PedidoRepositorio pedidos = new PedidoRepositorioJdbc(banco, usuarios, produtos, ingressos);
+        AuditoriaRepositorio auditoria = new AuditoriaRepositorioJdbc(banco);
+
+        // segurança: quem confere se o usuário é mesmo administrador, e a trilha de quem fez o quê
+        ControleDeAcesso acesso = new ControleDeAcesso(usuarios);
+        TrilhaDeAuditoria trilha = new TrilhaDeAuditoria(auditoria, acesso);
 
         // serviços recebem os repositórios pelas interfaces
         List<FormaPagamento> formasPagamento = List.of(new FormaPagamentoPix(), new FormaPagamentoCartao());
-        FilmeService filmeService = new FilmeService(filmes);
-        ProdutoService produtoService = new ProdutoService(produtos);
-        SessaoService sessaoService = new SessaoService(sessoes);
-        VendaService vendaService = new VendaService(formasPagamento, pedidos, ingressos, produtos);
-        ContaService contaService = new ContaService(usuarios);
-        PedidoService pedidoService = new PedidoService(pedidos);
+        FilmeService filmeService = new FilmeService(filmes, acesso, trilha);
+        ProdutoService produtoService = new ProdutoService(produtos, acesso, trilha);
+        SessaoService sessaoService = new SessaoService(sessoes, acesso, trilha);
+        VendaService vendaService = new VendaService(formasPagamento, pedidos, ingressos, produtos, trilha);
+        ContaService contaService = new ContaService(usuarios, trilha);
+        PedidoService pedidoService = new PedidoService(pedidos, acesso, trilha);
         // a área do cliente só enxerga o que um cliente pode fazer (a interface CatalogoCliente)
         CatalogoCliente catalogo = new AtendimentoCliente(sessaoService, produtoService, vendaService, pedidoService);
 
         // inicia a GUI d forma segura
         SwingUtilities.invokeLater(() -> {
             TemaAstra.instalar();
-            AstraFrame tela = new AstraFrame(contaService, filmeService, produtoService, sessaoService, pedidoService, catalogo); // cria janela
+            AstraFrame tela = new AstraFrame(contaService, filmeService, produtoService, sessaoService, pedidoService, trilha, catalogo); // cria janela
 
             tela.setVisible(true); // dx janela visível
         });
