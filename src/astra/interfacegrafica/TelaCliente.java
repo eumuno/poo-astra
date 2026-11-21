@@ -2,7 +2,6 @@ package astra.interfacegrafica;
 
 import astra.excecoes.*;
 import astra.modelo.*;
-import astra.persistencia.*;
 import astra.servico.*;
 import astra.servico.pagamento.FormaPagamento;
 import javax.swing.*;
@@ -11,15 +10,21 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.time.format.DateTimeFormatter;
 
-/** Compra de ingressos e bomboniere, com seleção visual de poltronas. */
+/**
+ * Área do cliente: escolher sessão e poltronas, comprar produtos da bomboniere, revisar o carrinho,
+ * pagar e acompanhar as próprias compras.
+ *
+ * <p>A tela conhece apenas a interface {@link CatalogoCliente}: não importa nenhuma classe de
+ * persistência e não enxerga operações de administrador. Toda consulta ou gravação roda em
+ * segundo plano (SwingWorker), sem travar a janela.</p>
+ */
 public class TelaCliente extends JFrame {
+    private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
     private final Cliente cliente;
-    private final ProdutoService produtos;
-    private final SessaoService sessoes;
-    private final VendaService vendas;
-    private final IngressoRepositorio ingressos;
-    private final PedidoRepositorio pedidos;
+    private final CatalogoCliente catalogo;
     private Pedido pedido;
     private final JComboBox<Sessao> comboSessoes = new JComboBox<>();
     private final JComboBox<Produto> comboProdutos = new JComboBox<>();
@@ -47,11 +52,16 @@ public class TelaCliente extends JFrame {
     private long versaoConsulta = 0;
     private boolean carregandoSessoes;
 
-    public TelaCliente(Cliente cliente, ProdutoService produtos, SessaoService sessoes,
-                       VendaService vendas, IngressoRepositorio ingressos, PedidoRepositorio pedidos) {
-        this.cliente = cliente; this.produtos = produtos; this.sessoes = sessoes;
-        this.vendas = vendas; this.ingressos = ingressos; this.pedidos = pedidos;
-        this.pedido = vendas.iniciarPedido(cliente);
+    /**
+     * Monta a janela do cliente e abre um pedido novo e vazio para ele.
+     *
+     * @param cliente  o cliente que fez login
+     * @param catalogo o que a área do cliente pode fazer (consultar, montar o pedido e pagar)
+     */
+    public TelaCliente(Cliente cliente, CatalogoCliente catalogo) {
+        this.cliente = cliente;
+        this.catalogo = catalogo;
+        this.pedido = catalogo.iniciarPedido(cliente);
         TemaAstra.configurarJanela(this, "Cliente · " + cliente.getNome(), 1150, 830);
         abas.setFont(new Font("SansSerif", Font.BOLD, 16));
         abas.addTab("Ingressos", criarIngressos());
@@ -93,6 +103,7 @@ public class TelaCliente extends JFrame {
         JPanel painelEscolha = new JPanel(new BorderLayout(0, 16));
         painelEscolha.setOpaque(false);
         painelEscolha.setPreferredSize(new Dimension(405, 400));
+        painelEscolha.setMinimumSize(new Dimension(405, 300)); // sem isto o combo de sessões encolhe em janelas baixas e corta o horário
         JLabel etapaSessao = TemaAstra.destaque("1   ESCOLHA SUA SESSÃO");
         etapaSessao.setForeground(TemaAstra.SUAVE);
         JPanel tituloEFormulario = new JPanel();
@@ -164,7 +175,7 @@ public class TelaCliente extends JFrame {
             }
             try {
                 Sessao sessao = (Sessao) comboSessoes.getSelectedItem();
-                vendas.venderIngresso(pedido, sessao, numeroSelecionado,
+                catalogo.venderIngresso(pedido, sessao, numeroSelecionado,
                         (Ingresso.TipoIngresso) tipo.getSelectedItem());
                 int adicionada = numeroSelecionado;
                 numeroSelecionado = -1;
@@ -201,11 +212,7 @@ public class TelaCliente extends JFrame {
         grade.add(carregando); grade.revalidate(); grade.repaint();
         new SwingWorker<Set<Integer>, Void>() {
             @Override protected Set<Integer> doInBackground() throws Exception {
-                Set<Integer> lista = new HashSet<>();
-                for (Assento a : sessao.getSala().getAssentos()) {
-                    if (ingressos.assentoEstaOcupado(sessao.getId(), a.getNumero())) lista.add(a.getNumero());
-                }
-                return lista;
+                return catalogo.consultarAssentosOcupados(sessao);
             }
             @Override protected void done() {
                 if (versao != versaoConsulta) return;
@@ -400,7 +407,7 @@ public class TelaCliente extends JFrame {
         atualizarDisponibilidadeProduto();
         new SwingWorker<Produto, Void>() {
             @Override protected Produto doInBackground() throws Exception {
-                for (Produto produto : produtos.listarProdutos()) {
+                for (Produto produto : catalogo.listarProdutos()) {
                     if (produto.getId() == idProduto) return produto;
                 }
                 return null;
@@ -419,7 +426,7 @@ public class TelaCliente extends JFrame {
                             TemaAstra.erro(TelaCliente.this, "Estoque insuficiente de " + atual.getNome()
                                     + ": há " + Math.max(0, restante) + " unidade(s) disponíveis para adicionar.");
                         } else {
-                            vendas.adicionarProduto(pedido, atual, quantidade);
+                            catalogo.adicionarProduto(pedido, atual, quantidade);
                             atualizarResumo();
                             TemaAstra.sucesso(TelaCliente.this,
                                     quantidade + " × " + atual.getNome() + " adicionado(s) ao carrinho.");
@@ -477,7 +484,7 @@ public class TelaCliente extends JFrame {
         TemaAstra.linha(p, 0, "Valor da compra", totalPagamento);
         TemaAstra.linha(p, 1, "Informação", aviso);
         int linha = 2;
-        for (FormaPagamento forma : vendas.getFormasPagamento()) {
+        for (FormaPagamento forma : catalogo.getFormasPagamento()) {
             JButton pagar = TemaAstra.botao("Confirmar com " + forma.getNome());
             TemaAstra.linha(p, linha++, forma.getNome(), pagar);
             pagar.addActionListener(e -> finalizar(forma, pagar));
@@ -500,11 +507,11 @@ public class TelaCliente extends JFrame {
         historico.add(new JScrollPane(tabela), BorderLayout.CENTER);
         new SwingWorker<List<Pedido>, Void>() {
             @Override protected List<Pedido> doInBackground() throws Exception {
-                return pedidos.listarPorCliente(cliente.getId());
+                return catalogo.listarPedidosDoCliente(cliente);
             }
             @Override protected void done() {
                 try {
-                    for (Pedido p : get()) modelo.addRow(new Object[]{p.getId(), p.getData(),
+                    for (Pedido p : get()) modelo.addRow(new Object[]{p.getId(), p.getData().format(FORMATO_DATA),
                             TemaAstra.dinheiro(p.calcularTotal()), p.getStatus()});
                 } catch (Exception ex) { erroDoWorker("Não foi possível carregar suas compras", ex); }
             }
@@ -539,13 +546,13 @@ public class TelaCliente extends JFrame {
         botao.setEnabled(false);
         new SwingWorker<Void, Void>() {
             @Override protected Void doInBackground() throws Exception {
-                vendas.finalizarPedido(pedidoEmPagamento, forma); return null;
+                catalogo.finalizarPedido(pedidoEmPagamento, forma); return null;
             }
             @Override protected void done() {
                 botao.setEnabled(true);
                 try {
                     get();
-                    pedido = vendas.iniciarPedido(cliente);
+                    pedido = catalogo.iniciarPedido(cliente);
                     atualizarResumo();
                     abas.setSelectedIndex(4); // Mostra o comprovante no histórico sem fechar a janela.
                     TemaAstra.sucesso(TelaCliente.this, "Compra de demonstração concluída e salva no banco!");
@@ -600,7 +607,7 @@ public class TelaCliente extends JFrame {
         Sessao anterior = (Sessao) comboSessoes.getSelectedItem();
         new SwingWorker<List<Sessao>, Void>() {
             @Override protected List<Sessao> doInBackground() throws Exception {
-                return sessoes.listarSessoesDisponiveis();
+                return catalogo.listarSessoesDisponiveis();
             }
             @Override protected void done() {
                 try {
@@ -630,7 +637,7 @@ public class TelaCliente extends JFrame {
         atualizarDisponibilidadeProduto();
         new SwingWorker<List<Produto>, Void>() {
             @Override protected List<Produto> doInBackground() throws Exception {
-                return produtos.listarProdutos();
+                return catalogo.listarProdutos();
             }
             @Override protected void done() {
                 if (versao != versaoProdutos) return;
