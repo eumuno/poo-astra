@@ -28,6 +28,13 @@ public class SessaoRepositorioJdbc implements SessaoRepositorio {
     private final ConexaoBanco banco;
     private final FilmeRepositorio filmes;
 
+    /**
+     * Cria o repositório com as dependências recebidas.
+     *
+     * @param banco banco de onde as conexões são abertas
+     * @param filmes filmes usados para montar o filme de cada sessão
+     * @throws IllegalArgumentException se alguma dependência for nula
+     */
     public SessaoRepositorioJdbc(ConexaoBanco banco, FilmeRepositorio filmes) {
         if (banco == null || filmes == null) {
             throw new IllegalArgumentException("A conexão e o repositório de filmes são obrigatórios!");

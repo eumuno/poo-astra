@@ -13,6 +13,7 @@ public interface SessaoRepositorio {
      * Grava uma sessão nova (id 0). O filme da sessão já precisa estar gravado
      * (id maior que 0) e a sala precisa existir.
      *
+     * @param sessao a sessão a gravar
      * @return a sessão gravada, já com o id definitivo
      * @throws PersistenciaException se a sala não existir ou se ela já tiver uma sessão nesse horário
      */
@@ -29,9 +30,20 @@ public interface SessaoRepositorio {
      */
     Sessao atualizar(Sessao sessao) throws PersistenciaException;
 
-    /** Todas as sessões, em ordem de data e hora. */
+    /**
+     * Lista todas as sessões, em ordem de data e hora.
+     *
+     * @return as sessões, inclusive canceladas e já realizadas
+     * @throws PersistenciaException se o banco falhar
+     */
     List<Sessao> listarTodos() throws PersistenciaException;
 
-    /** A sessão com esse id, ou vazia se não existir. */
+    /**
+     * Busca uma sessão pelo id.
+     *
+     * @param id identificador da sessão
+     * @return a sessão, ou vazia se não existir
+     * @throws PersistenciaException se o banco falhar
+     */
     Optional<Sessao> buscarPorId(int id) throws PersistenciaException;
 }

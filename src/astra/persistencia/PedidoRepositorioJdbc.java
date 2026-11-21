@@ -40,6 +40,15 @@ public class PedidoRepositorioJdbc implements PedidoRepositorio {
     private final ProdutoRepositorio produtos;
     private final IngressoRepositorio ingressos;
 
+    /**
+     * Cria o repositório com as dependências recebidas.
+     *
+     * @param banco banco de onde as conexões são abertas
+     * @param usuarios usuários usados para montar o cliente do pedido
+     * @param produtos produtos usados para montar os itens do pedido
+     * @param ingressos ingressos usados para montar os ingressos do pedido
+     * @throws IllegalArgumentException se alguma dependência for nula
+     */
     public PedidoRepositorioJdbc(ConexaoBanco banco, UsuarioRepositorio usuarios,
                                  ProdutoRepositorio produtos, IngressoRepositorio ingressos) {
         if (banco == null || usuarios == null || produtos == null || ingressos == null) {
