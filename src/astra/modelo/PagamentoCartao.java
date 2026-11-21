@@ -20,7 +20,7 @@ public class PagamentoCartao extends Pagamento {
     public void processarPagamento() throws PagamentoException {
         if (validade.isBefore(YearMonth.now())) {
             mudarStatus(Status.RECUSADO);
-            throw new PagamentoException("Cartão vencido. Use outro cartão.");
+            throw new PagamentoException("cartão vencido");
         }
         mudarStatus(Status.APROVADO);
     }

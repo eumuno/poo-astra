@@ -17,7 +17,7 @@ public class PagamentoPix extends Pagamento {
     public void processarPagamento() throws PagamentoException {
         if (LocalDateTime.now().isAfter(expiraEm)) {
             mudarStatus(Status.RECUSADO);
-            throw new PagamentoException("O Pix expirou. Gere um novo código.");
+            throw new PagamentoException("o código Pix expirou");
         }
         mudarStatus(Status.APROVADO);
     }

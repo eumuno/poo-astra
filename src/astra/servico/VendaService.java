@@ -54,10 +54,12 @@ public class VendaService {
             throw new IngressosEsgotadosException("Todos os assentos desta sessão já foram vendidos.");
         }
         if(!sessao.assentoEstaDisponivel(numeroAssento)){
-            throw new AssentoIndisponivelException("O assento " + numeroAssento + " está ocupado ou não existe.");
+            throw new AssentoIndisponivelException("O assento " + numeroAssento + " está ocupado ou não existe.",
+                    sessao.getId(), numeroAssento);
         }
         if(pedidoJaTemAssento(pedido, sessao, numeroAssento)){
-            throw new AssentoIndisponivelException("O assento " + numeroAssento + " já está no seu pedido.");
+            throw new AssentoIndisponivelException("O assento " + numeroAssento + " já está no seu pedido.",
+                    sessao.getId(), numeroAssento);
         }
 
         Assento assento = sessao.getSala().buscarAssento(numeroAssento);
@@ -91,17 +93,31 @@ public class VendaService {
     //Cria o pagemento pela forma escolhida, processa e confirma o pedido, usa o tipo geral Pagamento
     //Só depois do pagamento aprovado a venda (pedido + itens + ingressos + pagamento) é gravada no banco
     //e o estoque dos produtos é abatido (tudo na mesma transação, dentro do PedidoRepositorio)
+    //Se a gravação falhar DEPOIS do pagamento aprovado, a venda é desfeita (estorno + pedido ABERTO)
+    //para o cliente poder tentar de novo: o banco não gravou nada, então a memória também não pode dizer PAGO
     public Pagamento finalizarPedido(Pedido pedido, FormaPagamento forma)
             throws PagamentoException, AssentoIndisponivelException, EstoqueInsuficienteException, PersistenciaException {
         pedido.validarPodeSerPago();
         conferirAssentosNoBanco(pedido); //antes de cobrar: outra janela pode ter vendido o assento
         conferirEstoqueNoBanco(pedido);  //antes de cobrar: outra janela pode ter vendido as últimas unidades
         Pagamento pagamento = forma.criarPagamento(pedido.calcularTotal(), pedido.getCliente());
-        pagamento.processarPagamento();
+        pagamento.processarPagamento();  //se for recusado, lança aqui e o pedido nem chega a mudar
         pedido.confirmarPagamento();
-        pedidoRepositorio.salvar(pedido, pagamento); //transação: grava tudo ou nada
-        ocuparAssentosDoPedido(pedido);              //agora sim: pagou, os assentos ficam ocupados
+        try {
+            pedidoRepositorio.salvar(pedido, pagamento); //transação: grava tudo ou nada
+        } catch (PersistenciaException | AssentoIndisponivelException
+                 | EstoqueInsuficienteException | RuntimeException e) {
+            desfazerVenda(pedido, pagamento); //nada foi gravado: volta tudo como estava antes de pagar
+            throw e;                          //a tela continua recebendo a exceção original para explicar o motivo
+        }
+        ocuparAssentosDoPedido(pedido);              //agora sim: pagou e gravou, os assentos ficam ocupados
         return pagamento;
+    }
+
+    //O pagamento passou mas a gravação não: devolve o dinheiro e reabre o pedido
+    private void desfazerVenda(Pedido pedido, Pagamento pagamento) {
+        pagamento.estornar();
+        pedido.desfazerConfirmacaoPagamento();
     }
 
     //Marca na sessão (em memória) os assentos que acabaram de ser pagos e gravados
@@ -123,8 +139,7 @@ public class VendaService {
             Produto atual = produtoRepositorio.buscarPorId(pedidoDoProduto.getKey()).orElseThrow(() ->
                     new PersistenciaException("Um produto do pedido não existe mais no banco."));
             if (!atual.possuiEstoque(pedidoDoProduto.getValue())) {
-                throw new EstoqueInsuficienteException("Estoque insuficiente de \"" + atual.getNome()
-                        + "\": restam " + atual.getEstoque() + " e o pedido pede " + pedidoDoProduto.getValue() + ".");
+                throw new EstoqueInsuficienteException(atual.getNome(), atual.getEstoque(), pedidoDoProduto.getValue());
             }
         }
     }
@@ -134,7 +149,8 @@ public class VendaService {
         for (Ingresso ingresso : pedido.getIngressos()) {
             int numero = ingresso.getAssento().getNumero();
             if (ingressoRepositorio.assentoEstaOcupado(ingresso.getSessao().getId(), numero)) {
-                throw new AssentoIndisponivelException("O assento " + numero + " já foi vendido para esta sessão.");
+                throw new AssentoIndisponivelException("O assento " + numero + " já foi vendido para esta sessão.",
+                        ingresso.getSessao().getId(), numero);
             }
         }
     }
