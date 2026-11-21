@@ -3,7 +3,11 @@ package astra;
 import astra.excecoes.PersistenciaException;
 import astra.interfacegrafica.AstraFrame;
 import astra.persistencia.*;
+import astra.servico.AtendimentoCliente;
+import astra.servico.CatalogoCliente;
+import astra.servico.ContaService;
 import astra.servico.FilmeService;
+import astra.servico.PedidoService;
 import astra.servico.ProdutoService;
 import astra.servico.SessaoService;
 import astra.servico.VendaService;
@@ -16,7 +20,20 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import java.util.List;
 
+/**
+ * Ponto de entrada do Cinema Astra e raiz de composição: é o único lugar que conhece as classes
+ * concretas de persistência (JDBC) e as entrega, pelas interfaces, aos serviços e à interface gráfica.
+ */
 public class Main {
+
+    private Main() { }
+
+    /**
+     * Cria o banco (se ainda não existir), monta repositórios, serviços e fachada do cliente e abre a tela inicial.
+     * Se o banco não puder ser aberto, mostra o motivo e encerra.
+     *
+     * @param args não usado
+     */
     public static void main(String[] args) {
 
         // cria as tabelas e os dados iniciais no astra.db (se ainda não existirem)
@@ -44,11 +61,15 @@ public class Main {
         ProdutoService produtoService = new ProdutoService(produtos);
         SessaoService sessaoService = new SessaoService(sessoes);
         VendaService vendaService = new VendaService(formasPagamento, pedidos, ingressos, produtos);
+        ContaService contaService = new ContaService(usuarios);
+        PedidoService pedidoService = new PedidoService(pedidos);
+        // a área do cliente só enxerga o que um cliente pode fazer (a interface CatalogoCliente)
+        CatalogoCliente catalogo = new AtendimentoCliente(sessaoService, produtoService, vendaService, pedidoService);
 
         // inicia a GUI d forma segura
         SwingUtilities.invokeLater(() -> {
             TemaAstra.instalar();
-            AstraFrame tela = new AstraFrame(filmeService, produtoService, sessaoService, vendaService, usuarios, pedidos, ingressos); // cria janela
+            AstraFrame tela = new AstraFrame(contaService, filmeService, produtoService, sessaoService, pedidoService, catalogo); // cria janela
 
             tela.setVisible(true); // dx janela visível
         });

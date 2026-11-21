@@ -14,19 +14,33 @@ import java.util.Locale;
  * Centraliza cores, tipografia, componentes e tamanhos sem misturar regras do domínio.
  */
 public final class TemaAstra {
+    /** Fundo geral das janelas (roxo quase preto). */
     public static final Color FUNDO = new Color(15, 12, 25);
+    /** Fundo dos cartões e painéis, um tom acima do fundo. */
     public static final Color CARTAO = new Color(29, 23, 46);
+    /** Fundo alternativo: botões secundários e destaques sobre o cartão. */
     public static final Color CARTAO_ALT = new Color(47, 37, 70);
+    /** Cor principal da marca: botões primários e itens selecionados. */
     public static final Color ROXO = new Color(131, 52, 240); // selecionado: roxo vívido
+    /** Roxo mais escuro, usado em linhas selecionadas e listas. */
     public static final Color ROXO_ESCURO = new Color(105, 37, 192);
+    /** Cor padrão do texto sobre fundo escuro. */
     public static final Color TEXTO = new Color(250, 248, 255);
+    /** Texto secundário (rótulos e legendas) sobre fundo escuro. */
     public static final Color SUAVE = new Color(205, 195, 225);
+    /** Poltrona disponível (verde). */
     public static final Color LIVRE = new Color(12, 125, 75); // disponível: verde
+    /** Poltrona ocupada (vermelho). */
     public static final Color OCUPADO = new Color(184, 43, 69); // ocupado: vermelho
+    /** Fundo claro dos campos de entrada. */
     public static final Color CAMPO = new Color(250, 249, 254);
+    /** Texto sobre fundo claro (campos e tabelas). */
     public static final Color TEXTO_ESCURO = new Color(33, 27, 47);
+    /** Borda de campos e componentes claros. */
     public static final Color BORDA = new Color(202, 191, 224);
+    /** Borda discreta dos cartões sobre fundo escuro. */
     public static final Color BORDA_ESCURO = new Color(68, 53, 91);
+    /** Contorno do componente que está com o foco do teclado. */
     public static final Color FOCO = new Color(230, 183, 255);
 
     private static final String FAMILIA = "Segoe UI";
@@ -105,7 +119,11 @@ public final class TemaAstra {
         UIManager.put("ScrollPane.smoothScrolling", true);
     }
 
-    /** Cartão com fundo de alto contraste e borda discreta. */
+    /**
+     * Cria um cartão com fundo de alto contraste e borda discreta.
+     *
+     * @return o painel pronto para receber componentes
+     */
     public static JPanel painel() {
         JPanel p = new JPanel();
         p.setBackground(CARTAO);
@@ -115,6 +133,12 @@ public final class TemaAstra {
         return p;
     }
 
+    /**
+     * Cria um título grande (30 pt, negrito).
+     *
+     * @param texto o texto do título
+     * @return o rótulo formatado
+     */
     public static JLabel titulo(String texto) {
         JLabel l = new JLabel(texto);
         l.setFont(new Font(FAMILIA, Font.BOLD, 30));
@@ -122,6 +146,12 @@ public final class TemaAstra {
         return l;
     }
 
+    /**
+     * Cria um rótulo de apoio, com cor suave (descrições e informações secundárias).
+     *
+     * @param texto o texto do rótulo
+     * @return o rótulo formatado
+     */
     public static JLabel rotulo(String texto) {
         JLabel l = new JLabel(texto);
         l.setFont(FONTE);
@@ -129,6 +159,12 @@ public final class TemaAstra {
         return l;
     }
 
+    /**
+     * Cria um rótulo em negrito, usado como legenda de campos e como destaque.
+     *
+     * @param texto o texto do rótulo
+     * @return o rótulo formatado
+     */
     public static JLabel destaque(String texto) {
         JLabel l = new JLabel(texto);
         l.setFont(FONTE_ROTULO);
@@ -136,10 +172,22 @@ public final class TemaAstra {
         return l;
     }
 
+    /**
+     * Cria o botão principal de uma tela (roxo, em destaque).
+     *
+     * @param texto o texto do botão
+     * @return o botão formatado
+     */
     public static JButton botao(String texto) {
         return criarBotao(texto, ROXO, Color.WHITE, true);
     }
 
+    /**
+     * Cria um botão secundário (fundo neutro), para ações que não são a principal da tela.
+     *
+     * @param texto o texto do botão
+     * @return o botão formatado
+     */
     public static JButton botaoSecundario(String texto) {
         return criarBotao(texto, CARTAO_ALT, TEXTO, false);
     }
@@ -170,9 +218,13 @@ public final class TemaAstra {
     }
 
     /**
-     * Botão de poltrona com desenho próprio para manter o número legível.
+     * Cria o botão de uma poltrona, com desenho próprio para manter o número legível.
      * O FlatLaf continua responsável pelos outros componentes, mas não pode
      * abreviar "01" como "..." quando a largura da grade é recalculada.
+     *
+     * @param numero o número exibido no botão, por exemplo "03"
+     * @param cor    cor de fundo (livre, ocupada ou selecionada)
+     * @return o botão da poltrona
      */
     public static JButton botaoAssento(String numero, Color cor) {
         JButton botao = new JButton(numero) {
@@ -226,19 +278,35 @@ public final class TemaAstra {
         return botao;
     }
 
+    /**
+     * Cria um campo de texto com a aparência padrão do sistema.
+     *
+     * @param colunas largura do campo, em colunas
+     * @return o campo formatado
+     */
     public static JTextField campo(int colunas) {
         JTextField c = new JTextField(colunas);
         prepararEntrada(c);
         return c;
     }
 
+    /**
+     * Cria um campo de senha com a aparência padrão do sistema.
+     *
+     * @param colunas largura do campo, em colunas
+     * @return o campo formatado
+     */
     public static JPasswordField senha(int colunas) {
         JPasswordField c = new JPasswordField(colunas);
         prepararEntrada(c);
         return c;
     }
 
-    /** Campos compactos com letra de 16px, fundo claro e texto escuro. */
+    /**
+     * Aplica a um campo de entrada a aparência padrão: letra de 16 px, fundo claro e texto escuro.
+     *
+     * @param componente campo de texto, lista suspensa ou seletor numérico
+     */
     public static void prepararEntrada(JComponent componente) {
         componente.setFont(FONTE);
         componente.setBackground(CAMPO);
@@ -275,13 +343,26 @@ public final class TemaAstra {
         componente.setMinimumSize(new Dimension(120, 44));
     }
 
+    /**
+     * Cria um cartão com {@link GridBagLayout}, pronto para receber linhas de formulário
+     * (veja {@link #linha} e {@link #acoes}).
+     *
+     * @return o painel do formulário
+     */
     public static JPanel formulario() {
         JPanel p = painel();
         p.setLayout(new GridBagLayout());
         return p;
     }
 
-    /** Coloca a legenda acima do respectivo campo, nunca ao lado do valor. */
+    /**
+     * Coloca a legenda acima do respectivo campo, nunca ao lado do valor.
+     *
+     * @param p      formulário criado por {@link #formulario()}
+     * @param indice posição da linha, começando em 0
+     * @param texto  legenda do campo (vazia: o campo fica sem legenda)
+     * @param campo  componente de entrada
+     */
     public static void linha(JPanel p, int indice, String texto, JComponent campo) {
         GridBagConstraints g = new GridBagConstraints();
         g.gridx = 0;
@@ -300,6 +381,13 @@ public final class TemaAstra {
         p.add(campo, g);
     }
 
+    /**
+     * Coloca no formulário uma barra de botões alinhada à direita.
+     *
+     * @param p      formulário criado por {@link #formulario()}
+     * @param indice posição da linha, começando em 0
+     * @param botoes os botões, da esquerda para a direita
+     */
     public static void acoes(JPanel p, int indice, JButton... botoes) {
         JPanel barra = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         barra.setOpaque(false);
@@ -311,38 +399,88 @@ public final class TemaAstra {
         p.add(barra, g);
     }
 
+    /**
+     * Formata um valor em reais, no padrão brasileiro.
+     *
+     * @param valor o valor em reais
+     * @return o texto formatado, por exemplo "R$ 25,00"
+     */
     public static String dinheiro(double valor) {
         return NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(valor);
     }
 
+    /**
+     * Mostra uma mensagem de erro com o título padrão "Astra | Atenção".
+     * Para escolher o título, use {@link #erro(Component, String, String)}.
+     *
+     * @param pai      componente sobre o qual a janela de aviso aparece
+     * @param mensagem o que aconteceu
+     */
     public static void erro(Component pai, String mensagem) {
         JOptionPane.showMessageDialog(pai, mensagem, "Astra | Atenção", JOptionPane.ERROR_MESSAGE);
     }
 
-    /** Algo que o cliente resolve (poltrona vendida, estoque, pagamento recusado): ícone de aviso. */
+    /**
+     * Algo que o cliente resolve (poltrona vendida, estoque, pagamento recusado): janela com ícone de aviso.
+     *
+     * @param pai      componente sobre o qual a janela de aviso aparece
+     * @param titulo   título curto da janela
+     * @param mensagem o que aconteceu e o que fazer
+     */
     public static void aviso(Component pai, String titulo, String mensagem) {
         JOptionPane.showMessageDialog(pai, mensagem, "Astra | " + titulo, JOptionPane.WARNING_MESSAGE);
     }
 
-    /** Falha do sistema (banco fora do ar, erro inesperado): ícone de erro. */
+    /**
+     * Falha do sistema (banco fora do ar, erro inesperado): janela com ícone de erro.
+     *
+     * @param pai      componente sobre o qual a janela de aviso aparece
+     * @param titulo   título curto da janela
+     * @param mensagem o que aconteceu
+     */
     public static void erro(Component pai, String titulo, String mensagem) {
         JOptionPane.showMessageDialog(pai, mensagem, "Astra | " + titulo, JOptionPane.ERROR_MESSAGE);
     }
 
+    /**
+     * Mostra uma mensagem de confirmação com o título "Astra | Tudo certo".
+     *
+     * @param pai      componente sobre o qual a janela aparece
+     * @param mensagem o que deu certo
+     */
     public static void sucesso(Component pai, String mensagem) {
         JOptionPane.showMessageDialog(pai, mensagem, "Astra | Tudo certo", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    /**
+     * Aplica o padrão visual e de tamanho a uma janela: título com o prefixo "ASTRA CINEMA", fecha só a própria
+     * janela, fundo escuro e centralizada. O tamanho pedido é reduzido, se preciso, para caber na área útil da
+     * tela (sem a barra de tarefas), e o tamanho mínimo também.
+     *
+     * @param janela  a janela a configurar
+     * @param titulo  complemento do título da janela
+     * @param largura largura desejada, em pixels
+     * @param altura  altura desejada, em pixels
+     */
     public static void configurarJanela(JFrame janela, String titulo, int largura, int altura) {
         janela.setTitle("ASTRA CINEMA  •  " + titulo);
         janela.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        janela.setSize(largura, altura);
-        janela.setMinimumSize(new Dimension(980, 700));
+        // Nunca maior que a área útil da tela (sem a barra de tarefas): em notebooks de 768 px de altura
+        // as janelas de 810 e 830 px passavam da tela e cortavam o rodapé e os botões principais.
+        Rectangle util = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        janela.setSize(Math.min(largura, util.width), Math.min(altura, util.height));
+        janela.setMinimumSize(new Dimension(Math.min(980, util.width), Math.min(700, util.height)));
         janela.setLocationRelativeTo(null);
         janela.getContentPane().setBackground(FUNDO);
     }
 
-    /** Barra superior reutilizada nas áreas de cliente e administração. */
+    /**
+     * Cria a barra superior reutilizada nas áreas de cliente e administração.
+     *
+     * @param area          nome da área (por exemplo "Área do cliente")
+     * @param identificacao nome de quem está logado
+     * @return a barra superior
+     */
     public static JPanel cabecalho(String area, String identificacao) {
         JPanel topo = new JPanel(new BorderLayout());
         topo.setBackground(CARTAO);
@@ -370,7 +508,14 @@ public final class TemaAstra {
         return topo;
     }
 
-    /** Usa barra superior + abas para navegação previsível. */
+    /**
+     * Monta a área principal de uma janela: barra superior e abas para navegação previsível.
+     *
+     * @param area          nome da área, mostrado no cabeçalho
+     * @param identificacao nome de quem está logado
+     * @param abas          as abas da área
+     * @return o painel que vira o conteúdo da janela
+     */
     public static JPanel areaPrincipal(String area, String identificacao, JTabbedPane abas) {
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(FUNDO);
@@ -383,6 +528,13 @@ public final class TemaAstra {
         return root;
     }
 
+    /**
+     * Monta uma página: trilha ("CINEMA ASTRA / TÍTULO"), título e o conteúdo logo abaixo.
+     *
+     * @param titulo   título da página
+     * @param conteudo o que aparece abaixo do título
+     * @return a página
+     */
     public static JPanel pagina(String titulo, JComponent conteudo) {
         JPanel p = new JPanel(new BorderLayout(0, 18));
         p.setBackground(FUNDO);
@@ -397,7 +549,14 @@ public final class TemaAstra {
         return p;
     }
 
-    /** Centraliza o formulário, mantendo altura natural e rolagem ao reduzir a janela. */
+    /**
+     * Centraliza um formulário numa página, mantendo a altura natural e rolagem ao reduzir a janela.
+     *
+     * @param titulo     título da página
+     * @param formulario o formulário criado por {@link #formulario()}
+     * @param largura    largura do formulário, em pixels
+     * @return a página com o formulário
+     */
     public static JPanel paginaFormulario(String titulo, JPanel formulario, int largura) {
         JPanel centralizador = new JPanel(new GridBagLayout());
         centralizador.setBackground(FUNDO);
@@ -415,7 +574,11 @@ public final class TemaAstra {
         return pagina(titulo, scroll);
     }
 
-    /** Linhas claras e alternadas para não misturar textos com o fundo escuro. */
+    /**
+     * Aplica à tabela linhas claras e alternadas, para não misturar textos com o fundo escuro.
+     *
+     * @param tabela a tabela a formatar
+     */
     public static void configurarTabela(JTable tabela) {
         tabela.setFont(FONTE);
         tabela.setRowHeight(46);

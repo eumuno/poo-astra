@@ -22,6 +22,8 @@ import java.util.List;
  * num banco temporário (não mexe no astra.db). Rode a partir da raiz do projeto.
  */
 public class TesteAdmin {
+
+    private TesteAdmin() { }
     static int ok = 0;
 
     static void check(boolean cond, String msg) {
@@ -41,6 +43,12 @@ public class TesteAdmin {
         return lista.stream().anyMatch(s -> s.getId() == id);
     }
 
+    /**
+     * Executa todas as verificações.
+     *
+     * @param a não usado
+     * @throws Exception se alguma verificação ou o banco falhar
+     */
     public static void main(String[] a) throws Exception {
         java.io.File arquivo = java.io.File.createTempFile("teste_admin", ".db");
         arquivo.deleteOnExit();

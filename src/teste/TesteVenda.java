@@ -22,6 +22,8 @@ import java.util.List;
  * Rode a partir da raiz do projeto, com lib/sqlite-jdbc no classpath.
  */
 public class TesteVenda {
+
+    private TesteVenda() { }
     static int ok = 0;
 
     static void check(boolean cond, String msg) {
@@ -49,6 +51,12 @@ public class TesteVenda {
         }
     }
 
+    /**
+     * Executa todas as verificações.
+     *
+     * @param a não usado
+     * @throws Exception se alguma verificação ou o banco falhar
+     */
     public static void main(String[] a) throws Exception {
         java.io.File arquivo = java.io.File.createTempFile("teste_venda", ".db");
         arquivo.deleteOnExit();
@@ -68,7 +76,7 @@ public class TesteVenda {
         Usuario admin = usuarios.autenticar("admin@astra", "123").orElse(null);
         check(admin instanceof Administrador && admin.getId() == 1, "login do admin do seed devolve Administrador");
         Usuario kiko = usuarios.autenticar("cliente@email.com", "123").orElse(null);
-        check(kiko instanceof Cliente && ((Cliente) kiko).getCpf().equals("000.000.000-00"), "login do cliente do seed devolve Cliente com CPF");
+        check(kiko instanceof Cliente && ((Cliente) kiko).getCpf().equals("00000000000"), "login do cliente do seed devolve Cliente com CPF");
         check(!usuarios.autenticar("cliente@email.com", "errada").isPresent(), "senha errada não autentica");
         check(!usuarios.autenticar("naoexiste@email.com", "123").isPresent(), "e-mail inexistente não autentica");
         check(usuarios.buscarPorEmail("CLIENTE@Email.com").isPresent(), "busca por e-mail ignora maiúsculas");
