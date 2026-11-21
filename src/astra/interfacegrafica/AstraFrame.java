@@ -1,5 +1,6 @@
 package astra.interfacegrafica;
 
+import astra.excecoes.AcessoNegadoException;
 import astra.modelo.*;
 import astra.servico.*;
 import javax.swing.*;
@@ -13,11 +14,19 @@ import java.util.concurrent.ExecutionException;
  * cadastro estão em {@link ContaService}; a tela não conhece nenhuma classe de persistência.</p>
  */
 public class AstraFrame extends JFrame {
+    /** Login e criação de conta. */
     private final ContaService contas;
+    /** Casos de uso de filmes, entregues à área do administrador. */
     private final FilmeService filmes;
+    /** Casos de uso de produtos, entregues à área do administrador. */
     private final ProdutoService produtos;
+    /** Casos de uso de sessões, entregues à área do administrador. */
     private final SessaoService sessoes;
+    /** Acompanhamento de pedidos, entregue à área do administrador. */
     private final PedidoService pedidos;
+    /** Consulta da trilha de auditoria, entregue à área do administrador. */
+    private final TrilhaDeAuditoria trilha;
+    /** O que a área do cliente pode fazer, entregue à tela do cliente. */
     private final CatalogoCliente catalogo;
 
     /**
@@ -29,15 +38,18 @@ public class AstraFrame extends JFrame {
      * @param produtos casos de uso de produtos (área do administrador)
      * @param sessoes  casos de uso de sessões (área do administrador)
      * @param pedidos  acompanhamento de pedidos (área do administrador)
+     * @param trilha   consulta da trilha de auditoria (área do administrador)
      * @param catalogo o que a área do cliente pode fazer
      */
     public AstraFrame(ContaService contas, FilmeService filmes, ProdutoService produtos,
-                      SessaoService sessoes, PedidoService pedidos, CatalogoCliente catalogo) {
+                      SessaoService sessoes, PedidoService pedidos, TrilhaDeAuditoria trilha,
+                      CatalogoCliente catalogo) {
         this.contas = contas;
         this.filmes = filmes;
         this.produtos = produtos;
         this.sessoes = sessoes;
         this.pedidos = pedidos;
+        this.trilha = trilha;
         this.catalogo = catalogo;
         TemaAstra.configurarJanela(this, "Boas-vindas", 1050, 720);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -172,7 +184,7 @@ public class AstraFrame extends JFrame {
                         return;
                     }
                     if (usuario instanceof Administrador a) {
-                        new TelaAdmin(a, filmes, produtos, sessoes, pedidos).setVisible(true);
+                        new TelaAdmin(a, filmes, produtos, sessoes, pedidos, trilha).setVisible(true);
                     } else {
                         new TelaCliente((Cliente) usuario, catalogo).setVisible(true);
                     }
@@ -186,6 +198,9 @@ public class AstraFrame extends JFrame {
                     if (causa instanceof IllegalArgumentException) { // campo em branco: o serviço explica
                         TemaAstra.erro(AstraFrame.this, causa.getMessage());
                         (email.isBlank() ? emailCampo : senhaCampo).requestFocusInWindow();
+                    } else if (causa instanceof AcessoNegadoException) { // tentativas demais: o serviço diz quanto esperar
+                        TemaAstra.aviso(AstraFrame.this, "Acesso temporariamente bloqueado", causa.getMessage());
+                        senhaCampo.setText("");
                     } else {
                         TemaAstra.erro(AstraFrame.this, "Falha ao consultar o banco: " + causa.getMessage());
                     }
