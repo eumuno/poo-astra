@@ -10,10 +10,10 @@
 -- =====================================================================
 
 INSERT INTO usuario (tipo, nome, email, senha_hash, cpf) VALUES
-    ('ADMINISTRADOR', 'Admin', 'admin@astra',
-     'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', NULL),
-    ('CLIENTE', 'Kiko da Silva', 'cliente@email.com',
-     'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', '000.000.000-00');
+                                                             ('ADMINISTRADOR', 'Admin', 'admin@astra',
+                                                              'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', NULL),
+                                                             ('CLIENTE', 'Kiko da Silva', 'cliente@email.com',
+                                                              'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', '00000000000');
 
 INSERT INTO filme (titulo, duracao_minutos, classificacao, genero, diretor, ativo, dublado, sinopse) VALUES
     ('O Auto da Compadecida', 104, 'DOZE', 'Comédia/Aventura', 'Guel Arraes', 1, 1,
@@ -41,7 +41,7 @@ WHERE f.titulo = 'O Auto da Compadecida' AND s.numero = 1;
 
 -- Filmes adicionais
 INSERT INTO filme (titulo, duracao_minutos, classificacao, genero, diretor, ativo, dublado, sinopse) VALUES
-    ('Central do Brasil', 113, 'DOZE', 'Drama', 'Walter Salles', 1, 0,
-     'Dora, uma ex-professora que escreve cartas para analfabetos, ajuda um menino a procurar o pai no Nordeste.'),
-    ('Cidade de Deus', 130, 'DEZESSEIS', 'Drama/Crime', 'Fernando Meirelles', 1, 0,
-     'Buscapé, um jovem fotógrafo, acompanha o crescimento do crime organizado na Cidade de Deus, no Rio de Janeiro.');
+                                                                                                         ('Central do Brasil', 113, 'DOZE', 'Drama', 'Walter Salles', 1, 0,
+                                                                                                          'Dora, uma ex-professora que escreve cartas para analfabetos, ajuda um menino a procurar o pai no Nordeste.'),
+                                                                                                         ('Cidade de Deus', 130, 'DEZESSEIS', 'Drama/Crime', 'Fernando Meirelles', 1, 0,
+                                                                                                          'Buscapé, um jovem fotógrafo, acompanha o crescimento do crime organizado na Cidade de Deus, no Rio de Janeiro.');
