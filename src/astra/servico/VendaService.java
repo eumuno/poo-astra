@@ -10,12 +10,18 @@ import astra.persistencia.PedidoRepositorio;
 import astra.persistencia.ProdutoRepositorio;
 import astra.servico.pagamento.FormaPagamento;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-//Venda: pedido, ingresso, produto e pagamento.
-//Regras estavam antes entre CinemaService e TelaCliente.
-
+/**
+ * Casos de uso da venda: montar o pedido (ingressos e produtos), consultar poltronas ocupadas e pagar.
+ *
+ * <p>As regras da venda ficam aqui, e não na interface gráfica. Depende apenas de interfaces
+ * ({@link PedidoRepositorio}, {@link IngressoRepositorio}, {@link ProdutoRepositorio} e
+ * {@link FormaPagamento}), que chegam prontas pelo construtor.</p>
+ */
 public class VendaService {
 
     private final List<FormaPagamento> formasPagamento;
@@ -23,7 +29,15 @@ public class VendaService {
     private final IngressoRepositorio ingressoRepositorio; //interface: consulta assentos vendidos
     private final ProdutoRepositorio produtoRepositorio;   //interface: consulta o estoque atual
 
-    //Chegam prontas pelo construtor
+    /**
+     * Cria o serviço de venda.
+     *
+     * @param formasPagamento     formas que o cliente pode escolher (pelo menos uma)
+     * @param pedidoRepositorio   onde a venda é gravada
+     * @param ingressoRepositorio de onde se consulta quais poltronas já foram vendidas
+     * @param produtoRepositorio  de onde se consulta o estoque atual
+     * @throws IllegalArgumentException se faltar alguma forma de pagamento ou algum repositório
+     */
     public VendaService(List<FormaPagamento> formasPagamento, PedidoRepositorio pedidoRepositorio,
                         IngressoRepositorio ingressoRepositorio, ProdutoRepositorio produtoRepositorio) {
         if (formasPagamento == null || formasPagamento.isEmpty()) {
@@ -38,17 +52,38 @@ public class VendaService {
         this.produtoRepositorio = produtoRepositorio;
     }
 
+    /**
+     * Abre um pedido novo e vazio para o cliente.
+     *
+     * @param cliente dono do pedido
+     * @return o pedido aberto (ainda não gravado: id 0)
+     */
     public Pedido iniciarPedido(Cliente cliente) {
-        //id 0: pedido ainda não gravado - id vem do banco quando tiver PedidoRepositorio
+        //id 0: pedido ainda não gravado - o id definitivo vem do banco em finalizarPedido()
         return new Pedido(0, cliente);
     }
 
+    /**
+     * Coloca um ingresso no pedido. A poltrona só é marcada como ocupada depois do pagamento.
+     *
+     * @param pedido        pedido aberto que receberá o ingresso
+     * @param sessao        sessão escolhida (precisa estar à venda)
+     * @param numeroAssento número da poltrona
+     * @param tipo          inteira ou meia
+     * @return o ingresso criado
+     * @throws AssentoIndisponivelException se a poltrona está ocupada, não existe ou já está no pedido
+     * @throws IngressosEsgotadosException  se a sessão não tem mais nenhuma poltrona livre
+     * @throws IllegalArgumentException     se nenhuma sessão foi escolhida
+     * @throws IllegalStateException        se a sessão foi cancelada ou já começou
+     */
     public Ingresso venderIngresso (Pedido pedido, Sessao sessao, int numeroAssento, Ingresso.TipoIngresso tipo) throws AssentoIndisponivelException, IngressosEsgotadosException {
         if(sessao == null){
             throw new IllegalArgumentException("Você precisa escolher uma sessão!");
         }
         if(!sessao.estaDisponivel()){
-            throw new IllegalStateException("A sessão não está disponível para venda!");
+            throw new IllegalStateException(sessao.getStatus() == Sessao.StatusSessao.AGENDADA
+                    ? "Esta sessão já começou e não vende mais ingressos."
+                    : "A sessão não está disponível para venda!");
         }
         if(!sessao.possuiVagas()){
             throw new IngressosEsgotadosException("Todos os assentos desta sessão já foram vendidos.");
@@ -79,6 +114,32 @@ public class VendaService {
         return false;
     }
 
+    /**
+     * Consulta no banco (a fonte da verdade) quais poltronas da sessão já foram vendidas.
+     * É o que a tela usa para pintar as poltronas de vermelho, sem conhecer o repositório.
+     *
+     * @param sessao a sessão consultada
+     * @return os números das poltronas vendidas (vazio se nenhuma)
+     * @throws PersistenciaException se o banco falhar
+     */
+    public Set<Integer> consultarAssentosOcupados(Sessao sessao) throws PersistenciaException {
+        Set<Integer> ocupados = new LinkedHashSet<>();
+        for (Assento assento : sessao.getSala().getAssentos()) {
+            if (ingressoRepositorio.assentoEstaOcupado(sessao.getId(), assento.getNumero())) {
+                ocupados.add(assento.getNumero());
+            }
+        }
+        return ocupados;
+    }
+
+    /**
+     * Coloca produtos da bomboniere no pedido.
+     *
+     * @param pedido     pedido aberto que receberá o item
+     * @param produto    produto escolhido
+     * @param quantidade unidades (pelo menos 1)
+     * @throws IllegalArgumentException se nenhum produto foi escolhido ou a quantidade é inválida
+     */
     public void adicionarProduto(Pedido pedido, Produto produto, int quantidade){
         if (produto == null){
             throw new IllegalArgumentException("Escolha um produto.");
@@ -86,18 +147,36 @@ public class VendaService {
         pedido.adicionarItem(produto, quantidade);
     }
 
+    /**
+     * Formas de pagamento oferecidas ao cliente.
+     *
+     * @return a lista (somente leitura) de formas de pagamento
+     */
     public List<FormaPagamento> getFormasPagamento() {
         return formasPagamento;
     }
 
-    //Cria o pagemento pela forma escolhida, processa e confirma o pedido, usa o tipo geral Pagamento
-    //Só depois do pagamento aprovado a venda (pedido + itens + ingressos + pagamento) é gravada no banco
-    //e o estoque dos produtos é abatido (tudo na mesma transação, dentro do PedidoRepositorio)
-    //Se a gravação falhar DEPOIS do pagamento aprovado, a venda é desfeita (estorno + pedido ABERTO)
-    //para o cliente poder tentar de novo: o banco não gravou nada, então a memória também não pode dizer PAGO
+    /**
+     * Paga o pedido pela forma escolhida e, só depois do pagamento aprovado, grava a venda
+     * (pedido, itens, ingressos e pagamento) numa transação e abate o estoque.
+     *
+     * <p>Antes de cobrar, confere se as sessões ainda estão à venda e se as poltronas e o
+     * estoque continuam disponíveis. Se a gravação falhar depois do pagamento aprovado, a venda
+     * é desfeita (estorno e pedido volta a ABERTO) para o cliente poder tentar de novo.</p>
+     *
+     * @param pedido pedido aberto e não vazio
+     * @param forma  forma de pagamento escolhida
+     * @return o pagamento aprovado
+     * @throws PagamentoException           se o pagamento for recusado
+     * @throws AssentoIndisponivelException se alguma poltrona já foi vendida
+     * @throws EstoqueInsuficienteException se algum produto não tem unidades suficientes
+     * @throws PersistenciaException        se o banco falhar
+     * @throws IllegalStateException        se o pedido não puder ser pago ou alguma sessão já não estiver à venda
+     */
     public Pagamento finalizarPedido(Pedido pedido, FormaPagamento forma)
             throws PagamentoException, AssentoIndisponivelException, EstoqueInsuficienteException, PersistenciaException {
         pedido.validarPodeSerPago();
+        conferirSessoesDoPedido(pedido); //antes de cobrar: a sessão pode ter começado enquanto o ingresso estava no carrinho
         conferirAssentosNoBanco(pedido); //antes de cobrar: outra janela pode ter vendido o assento
         conferirEstoqueNoBanco(pedido);  //antes de cobrar: outra janela pode ter vendido as últimas unidades
         Pagamento pagamento = forma.criarPagamento(pedido.calcularTotal(), pedido.getCliente());
@@ -124,6 +203,16 @@ public class VendaService {
     private void ocuparAssentosDoPedido(Pedido pedido) {
         for (Ingresso ingresso : pedido.getIngressos()) {
             ingresso.getSessao().ocuparAssento(ingresso.getAssento().getNumero());
+        }
+    }
+
+    //Uma sessão agendada deixa de estar à venda quando o horário chega; o ingresso pode ter ficado no carrinho
+    private void conferirSessoesDoPedido(Pedido pedido) {
+        for (Ingresso ingresso : pedido.getIngressos()) {
+            if (!ingresso.getSessao().estaDisponivel()) {
+                throw new IllegalStateException("A sessão \"" + ingresso.getSessao()
+                        + "\" não está mais à venda (já começou ou foi cancelada). Remova o ingresso do carrinho.");
+            }
         }
     }
 
