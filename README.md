@@ -174,6 +174,10 @@ Os diagramas UML estão na pasta [`diagramas/`](diagramas/).
 
 ![Diagrama de casos de uso](diagramas/diagrama-de-casos-de-uso.png)
 
+**Diagrama Entidade-Relacionamento (DER) do banco**
+
+![DER do banco](diagramas/diagrama-der.png)
+
 ## Demonstração da Interface Gráfica
 
 Capturas de tela do sistema em funcionamento (pasta [`docs/prints/`](docs/prints/)):
@@ -189,3 +193,7 @@ Capturas de tela do sistema em funcionamento (pasta [`docs/prints/`](docs/prints
 | Erro tratado (assento ocupado) |
 |---|
 | ![Assento ocupado](docs/prints/05-erro-assento-ocupado.png) |
+
+| Cadastro de sessão com data |
+|---|
+| ![Cadastro de sessão](docs/prints/06-admin-sessao.png) |
