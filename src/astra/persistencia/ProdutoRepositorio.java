@@ -27,4 +27,26 @@ public interface ProdutoRepositorio {
 
     /** O produto com esse id, ou vazio se não existir. */
     Optional<Produto> buscarPorId(int id) throws PersistenciaException;
+
+    /**
+     * Atualiza só os dados cadastrais do produto (nome, descrição, preço e categoria).
+     * O estoque NÃO é alterado: ele só muda por {@link #adicionarEstoque(int, int)} ou por uma venda.
+     * Assim, editar um produto com um objeto carregado há tempos não desfaz baixas ou reposições recentes.
+     *
+     * @param produto produto com id maior que 0 e os dados novos
+     * @return o produto como ficou no banco, com o estoque atual
+     * @throws PersistenciaException se o produto não existir ou o banco falhar
+     */
+    Produto atualizarDados(Produto produto) throws PersistenciaException;
+
+    /**
+     * Soma unidades ao estoque do produto em uma única instrução ({@code estoque = estoque + ?}),
+     * sem ler antes: duas reposições ou uma reposição durante uma venda não se sobrescrevem.
+     *
+     * @param produtoId  id do produto
+     * @param quantidade unidades a somar (maior que zero)
+     * @return o produto com o estoque já atualizado
+     * @throws PersistenciaException se o produto não existir ou o banco falhar
+     */
+    Produto adicionarEstoque(int produtoId, int quantidade) throws PersistenciaException;
 }
