@@ -5,8 +5,8 @@ import astra.modelo.Filme;
 import astra.modelo.Pedido;
 import astra.modelo.Produto;
 import astra.modelo.Sessao;
-import astra.persistencia.PedidoRepositorio;
 import astra.servico.FilmeService;
+import astra.servico.PedidoService;
 import astra.servico.ProdutoService;
 import astra.servico.SessaoService;
 
@@ -49,7 +49,7 @@ public class TelaAdmin extends JFrame {
     private final FilmeService filmeService;
     private final ProdutoService produtoService;
     private final SessaoService sessaoService;
-    private final PedidoRepositorio pedidoRepositorio;
+    private final PedidoService pedidoService;
 
     private final DefaultTableModel filmesModelo = modeloDeTabela("Título", "Gênero", "Duração", "Classificação", "Situação");
     private final DefaultTableModel produtosModelo = modeloDeTabela("Produto", "Categoria", "Preço", "Estoque");
@@ -68,15 +68,15 @@ public class TelaAdmin extends JFrame {
      * @param filmeService      casos de uso de filmes
      * @param produtoService    casos de uso de produtos e estoque
      * @param sessaoService     casos de uso de sessões
-     * @param pedidoRepositorio consulta e atualização de status dos pedidos
+     * @param pedidoService     acompanhamento dos pedidos (listar e atualizar o status)
      */
     public TelaAdmin(Administrador admin, FilmeService filmeService, ProdutoService produtoService,
-                     SessaoService sessaoService, PedidoRepositorio pedidoRepositorio) {
+                     SessaoService sessaoService, PedidoService pedidoService) {
         this.admin = admin;
         this.filmeService = filmeService;
         this.produtoService = produtoService;
         this.sessaoService = sessaoService;
-        this.pedidoRepositorio = pedidoRepositorio;
+        this.pedidoService = pedidoService;
         TemaAstra.configurarJanela(this, "Administração · " + admin.getNome(), 1120, 700);
 
         JTabbedPane abas = new JTabbedPane();
@@ -477,7 +477,7 @@ public class TelaAdmin extends JFrame {
     }
 
     private void carregarPedidos() {
-        executar(this, pedidoRepositorio::listarTodos, lista -> {
+        executar(this, pedidoService::listarTodos, lista -> {
             pedidosListados.clear();
             pedidosListados.addAll(lista);
             pedidosModelo.setRowCount(0);
@@ -491,19 +491,14 @@ public class TelaAdmin extends JFrame {
     private void alterarPedido(JTable tabela, boolean retirar) {
         Pedido pedido = selecionado(tabela, pedidosListados);
         if (pedido == null) return;
-        try {
-            if (retirar) pedido.retirar(); else pedido.marcarComoPronto();
-        } catch (IllegalStateException ex) {
-            TemaAstra.erro(this, ex.getMessage());
-            return;
-        }
-        executar(this, () -> {
-            pedidoRepositorio.atualizarStatus(pedido.getId(), pedido.getStatus());
-            return pedido;
-        }, atualizado -> {
-            carregarPedidos();
-            TemaAstra.sucesso(this, "Status atualizado.");
-        }, this::carregarPedidos);
+        // a regra (só pago vira pronto, só pronto vira retirado) é do serviço; a tela mostra o resultado
+        executar(this, () -> retirar
+                        ? pedidoService.marcarComoRetirado(admin, pedido.getId())
+                        : pedidoService.marcarComoPronto(admin, pedido.getId()),
+                atualizado -> {
+                    carregarPedidos();
+                    TemaAstra.sucesso(this, "Status atualizado.");
+                }, this::carregarPedidos);
     }
 
     // =====================================================================
