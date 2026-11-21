@@ -4,6 +4,9 @@ import astra.excecoes.PersistenciaException;
 import astra.modelo.*;
 import astra.persistencia.*;
 import astra.servico.FilmeService;
+import astra.excecoes.AcessoNegadoException;
+import astra.servico.TrilhaDeAuditoria;
+import astra.servico.ControleDeAcesso;
 import astra.servico.ProdutoService;
 import astra.servico.SessaoService;
 import astra.servico.VendaService;
@@ -59,13 +62,15 @@ public class TesteAdmin {
         ProdutoRepositorio produtos = new ProdutoRepositorioJdbc(banco);
         SessaoRepositorio sessoes = new SessaoRepositorioJdbc(banco, filmes);
         UsuarioRepositorio usuarios = new UsuarioRepositorioJdbc(banco);
+        ControleDeAcesso acesso = new ControleDeAcesso(usuarios);
+        TrilhaDeAuditoria trilha = new TrilhaDeAuditoria(new AuditoriaRepositorioJdbc(banco), acesso);
         IngressoRepositorio ingressos = new IngressoRepositorioJdbc(banco, sessoes, usuarios);
         PedidoRepositorio pedidos = new PedidoRepositorioJdbc(banco, usuarios, produtos, ingressos);
         List<FormaPagamento> formas = List.of(new FormaPagamentoPix());
-        VendaService venda = new VendaService(formas, pedidos, ingressos, produtos);
-        FilmeService fs = new FilmeService(filmes);
-        ProdutoService ps = new ProdutoService(produtos);
-        SessaoService ss = new SessaoService(sessoes);
+        VendaService venda = new VendaService(formas, pedidos, ingressos, produtos, trilha);
+        FilmeService fs = new FilmeService(filmes, acesso, trilha);
+        ProdutoService ps = new ProdutoService(produtos, acesso, trilha);
+        SessaoService ss = new SessaoService(sessoes, acesso, trilha);
         Administrador adm = (Administrador) usuarios.autenticar("admin@astra", "123").get();
         Cliente cliente = (Cliente) usuarios.autenticar("cliente@email.com", "123").get();
 
@@ -100,7 +105,7 @@ public class TesteAdmin {
         try { fs.atualizarFilme(adm, 9999, "Fantasma", 100, Filme.ClassificacaoIndicativa.LIVRE, "x", "y", true, false, ""); check(false, "id inexistente"); }
         catch (PersistenciaException e) { check(true, "editar filme que não existe lança PersistenciaException"); }
         try { fs.atualizarFilme(null, cidade.getId(), "X", 100, Filme.ClassificacaoIndicativa.LIVRE, "x", "y", true, false, ""); check(false, "sem admin"); }
-        catch (IllegalArgumentException e) { check(true, "sem administrador não edita filme"); }
+        catch (AcessoNegadoException e) { check(true, "sem administrador não edita filme"); }
         try { fs.atualizarFilme(adm, cidade.getId(), "X", 0, Filme.ClassificacaoIndicativa.LIVRE, "x", "y", true, false, ""); check(false, "duração 0"); }
         catch (IllegalArgumentException e) { check(true, "duração zero é recusada na edição"); }
         try { fs.atualizarFilme(adm, cidade.getId(), "X", 90, Filme.ClassificacaoIndicativa.LIVRE, "  ", "y", true, false, ""); check(false, "gênero vazio"); }
@@ -122,7 +127,7 @@ public class TesteAdmin {
         try { ps.reporEstoque(adm, 9999, 5); check(false, "produto inexistente"); }
         catch (PersistenciaException e) { check(true, "repor estoque de produto que não existe lança PersistenciaException"); }
         try { ps.reporEstoque(null, choc.getId(), 5); check(false, "sem admin"); }
-        catch (IllegalArgumentException e) { check(true, "sem administrador não repõe estoque"); }
+        catch (AcessoNegadoException e) { check(true, "sem administrador não repõe estoque"); }
 
         Produto depois = ps.atualizarProduto(adm, choc.getId(), "Chocolate ao Leite", "barra 90g", 7.5, Produto.CategoriaProduto.DOCE);
         Produto lidoP = produtos.buscarPorId(choc.getId()).get();
@@ -203,7 +208,7 @@ public class TesteAdmin {
         try { ss.atualizarSessao(adm, s1.getId(), cidade, 1, base.plusDays(9), 10.0); check(false, "editar cancelada"); }
         catch (IllegalStateException e) { check(true, "sessão cancelada não pode ser editada"); }
         try { ss.cancelarSessao(null, s2.getId()); check(false, "sem admin"); }
-        catch (IllegalArgumentException e) { check(true, "sem administrador não cancela sessão"); }
+        catch (AcessoNegadoException e) { check(true, "sem administrador não cancela sessão"); }
 
         System.out.println("\nTODOS OS " + ok + " TESTES PASSARAM");
     }

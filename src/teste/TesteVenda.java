@@ -6,6 +6,8 @@ import astra.excecoes.PersistenciaException;
 import astra.modelo.*;
 import astra.persistencia.*;
 import astra.servico.VendaService;
+import astra.servico.TrilhaDeAuditoria;
+import astra.servico.ControleDeAcesso;
 import astra.servico.pagamento.FormaPagamento;
 import astra.servico.pagamento.FormaPagamentoCartao;
 import astra.servico.pagamento.FormaPagamentoPix;
@@ -67,10 +69,12 @@ public class TesteVenda {
         ProdutoRepositorio produtos = new ProdutoRepositorioJdbc(banco);
         SessaoRepositorio sessoes = new SessaoRepositorioJdbc(banco, filmes);
         UsuarioRepositorio usuarios = new UsuarioRepositorioJdbc(banco);
+        ControleDeAcesso acesso = new ControleDeAcesso(usuarios);
+        TrilhaDeAuditoria trilha = new TrilhaDeAuditoria(new AuditoriaRepositorioJdbc(banco), acesso);
         IngressoRepositorio ingressos = new IngressoRepositorioJdbc(banco, sessoes, usuarios);
         PedidoRepositorio pedidos = new PedidoRepositorioJdbc(banco, usuarios, produtos, ingressos);
         List<FormaPagamento> formas = List.of(new FormaPagamentoPix(), new FormaPagamentoCartao());
-        VendaService venda = new VendaService(formas, pedidos, ingressos, produtos);
+        VendaService venda = new VendaService(formas, pedidos, ingressos, produtos, trilha);
 
         // ---------------- USUÁRIO ----------------
         Usuario admin = usuarios.autenticar("admin@astra", "123").orElse(null);

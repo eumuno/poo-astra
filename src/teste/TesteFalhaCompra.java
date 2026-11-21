@@ -8,6 +8,8 @@ import astra.interfacegrafica.FalhaDaCompra;
 import astra.modelo.*;
 import astra.persistencia.*;
 import astra.servico.VendaService;
+import astra.servico.TrilhaDeAuditoria;
+import astra.servico.ControleDeAcesso;
 import astra.servico.pagamento.FormaPagamento;
 import astra.servico.pagamento.FormaPagamentoPix;
 
@@ -60,6 +62,8 @@ public class TesteFalhaCompra {
         ProdutoRepositorio produtos = new ProdutoRepositorioJdbc(banco);
         SessaoRepositorio sessoes = new SessaoRepositorioJdbc(banco, filmes);
         UsuarioRepositorio usuarios = new UsuarioRepositorioJdbc(banco);
+        ControleDeAcesso acesso = new ControleDeAcesso(usuarios);
+        TrilhaDeAuditoria trilha = new TrilhaDeAuditoria(new AuditoriaRepositorioJdbc(banco), acesso);
         IngressoRepositorio ingressos = new IngressoRepositorioJdbc(banco, sessoes, usuarios);
         PedidoRepositorio pedidosReal = new PedidoRepositorioJdbc(banco, usuarios, produtos, ingressos);
         List<FormaPagamento> formas = List.of(new FormaPagamentoPix());
@@ -69,7 +73,7 @@ public class TesteFalhaCompra {
         // ---------------- GRAVAÇÃO FALHA DEPOIS DO PAGAMENTO ----------------
         PedidoRepositorioQueFalha quebrado = new PedidoRepositorioQueFalha(
                 new PersistenciaException("Erro ao gravar o pedido.", new java.sql.SQLException("database is locked")));
-        VendaService vendaQuebrada = new VendaService(formas, quebrado, ingressos, produtos);
+        VendaService vendaQuebrada = new VendaService(formas, quebrado, ingressos, produtos, trilha);
         Pedido pedido = vendaQuebrada.iniciarPedido(cliente);
         vendaQuebrada.venderIngresso(pedido, sessao, 9, Ingresso.TipoIngresso.INTEIRA);
 
@@ -86,7 +90,7 @@ public class TesteFalhaCompra {
         check(pedido.getItens().size() == 1, "pedido reaberto aceita item novo");
 
         // ...e tentar de novo, agora com o banco funcionando
-        VendaService vendaReal = new VendaService(formas, pedidosReal, ingressos, produtos);
+        VendaService vendaReal = new VendaService(formas, pedidosReal, ingressos, produtos, trilha);
         Pagamento segundo = vendaReal.finalizarPedido(pedido, formas.get(0));
         check(segundo.getStatus() == Pagamento.Status.APROVADO && pedido.getStatus() == Pedido.StatusPedido.PAGO,
                 "a segunda tentativa do MESMO pedido é aprovada");
@@ -96,7 +100,7 @@ public class TesteFalhaCompra {
         // ---------------- CORRIDA: O BANCO RECUSA O ASSENTO DEPOIS DO PAGAMENTO ----------------
         PedidoRepositorioQueFalha corrida = new PedidoRepositorioQueFalha(
                 new AssentoIndisponivelException("O assento 10 já foi vendido para esta sessão.", sessao.getId(), 10));
-        VendaService vendaCorrida = new VendaService(formas, corrida, ingressos, produtos);
+        VendaService vendaCorrida = new VendaService(formas, corrida, ingressos, produtos, trilha);
         Pedido p2 = vendaCorrida.iniciarPedido(cliente);
         vendaCorrida.venderIngresso(p2, sessao, 10, Ingresso.TipoIngresso.MEIA);
         try { vendaCorrida.finalizarPedido(p2, formas.get(0)); check(false, "deveria falhar"); }
