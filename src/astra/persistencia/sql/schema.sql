@@ -114,3 +114,12 @@ CREATE TABLE IF NOT EXISTS pagamento (
 CREATE INDEX IF NOT EXISTS idx_ingresso_sessao ON ingresso (sessao_id);
 CREATE INDEX IF NOT EXISTS idx_sessao_filme    ON sessao (filme_id);
 CREATE INDEX IF NOT EXISTS idx_pedido_cliente  ON pedido (cliente_id);
+
+-- Trilha de auditoria: quem fez o quê e quando (não repúdio). Só recebe INSERT e SELECT pelo sistema.
+CREATE TABLE IF NOT EXISTS auditoria (
+                                         id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                                         quando     TEXT    NOT NULL,
+                                         usuario_id INTEGER REFERENCES usuario (id),
+                                         acao       TEXT    NOT NULL,
+                                         detalhe    TEXT    NOT NULL
+);

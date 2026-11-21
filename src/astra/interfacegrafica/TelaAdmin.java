@@ -4,11 +4,13 @@ import astra.modelo.Administrador;
 import astra.modelo.Filme;
 import astra.modelo.Pedido;
 import astra.modelo.Produto;
+import astra.modelo.RegistroDeAuditoria;
 import astra.modelo.Sessao;
 import astra.servico.FilmeService;
 import astra.servico.PedidoService;
 import astra.servico.ProdutoService;
 import astra.servico.SessaoService;
+import astra.servico.TrilhaDeAuditoria;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -35,6 +37,7 @@ import java.util.function.Consumer;
  *   <li><b>Produtos:</b> cadastrar, editar dados e repor estoque.</li>
  *   <li><b>Sessões:</b> cadastrar, editar e cancelar (só sem ingressos vendidos).</li>
  *   <li><b>Pedidos:</b> acompanhar e marcar como pronto ou retirado.</li>
+ *   <li><b>Auditoria:</b> consultar quem fez o quê (somente leitura).</li>
  * </ul>
  *
  * A tela só interpreta o que foi digitado e mostra o resultado: as regras ficam nos serviços.
@@ -42,23 +45,41 @@ import java.util.function.Consumer;
  */
 public class TelaAdmin extends JFrame {
     private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter FORMATO_DATA_COM_SEGUNDOS = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
     private static final Font FONTE_TEXTO = new Font("SansSerif", Font.PLAIN, 16);
 
+    /** Administrador logado: identifica quem altera os dados. */
     private final Administrador admin;
+    /** Casos de uso de filmes. */
     private final FilmeService filmeService;
+    /** Casos de uso de produtos e estoque. */
     private final ProdutoService produtoService;
+    /** Casos de uso de sessões. */
     private final SessaoService sessaoService;
+    /** Acompanhamento dos pedidos. */
     private final PedidoService pedidoService;
+    /** Consulta da trilha de auditoria. */
+    private final TrilhaDeAuditoria trilha;
 
+    /** Linhas da tabela de filmes. */
     private final DefaultTableModel filmesModelo = modeloDeTabela("Título", "Gênero", "Duração", "Classificação", "Situação");
+    /** Linhas da tabela de produtos. */
     private final DefaultTableModel produtosModelo = modeloDeTabela("Produto", "Categoria", "Preço", "Estoque");
+    /** Linhas da tabela de sessões. */
     private final DefaultTableModel sessoesModelo = modeloDeTabela("Filme", "Sala", "Data e hora", "Preço", "Vendidos", "Situação");
+    /** Linhas da tabela de pedidos. */
     private final DefaultTableModel pedidosModelo = modeloDeTabela("Pedido", "Cliente", "Data", "Total", "Status");
+    /** Linhas da tabela de auditoria. */
+    private final DefaultTableModel auditoriaModelo = modeloDeTabela("Quando", "Usuário (id)", "Ação", "Detalhe");
 
+    /** Filmes mostrados na tabela, na mesma ordem das linhas. */
     private final List<Filme> filmesListados = new ArrayList<>();
+    /** Produtos mostrados na tabela, na mesma ordem das linhas. */
     private final List<Produto> produtosListados = new ArrayList<>();
+    /** Sessões mostradas na tabela, na mesma ordem das linhas. */
     private final List<Sessao> sessoesListadas = new ArrayList<>();
+    /** Pedidos mostrados na tabela, na mesma ordem das linhas. */
     private final List<Pedido> pedidosListados = new ArrayList<>();
 
     /**
@@ -69,14 +90,16 @@ public class TelaAdmin extends JFrame {
      * @param produtoService    casos de uso de produtos e estoque
      * @param sessaoService     casos de uso de sessões
      * @param pedidoService     acompanhamento dos pedidos (listar e atualizar o status)
+     * @param trilha            consulta da trilha de auditoria
      */
     public TelaAdmin(Administrador admin, FilmeService filmeService, ProdutoService produtoService,
-                     SessaoService sessaoService, PedidoService pedidoService) {
+                     SessaoService sessaoService, PedidoService pedidoService, TrilhaDeAuditoria trilha) {
         this.admin = admin;
         this.filmeService = filmeService;
         this.produtoService = produtoService;
         this.sessaoService = sessaoService;
         this.pedidoService = pedidoService;
+        this.trilha = trilha;
         TemaAstra.configurarJanela(this, "Administração · " + admin.getNome(), 1120, 700);
 
         JTabbedPane abas = new JTabbedPane();
@@ -85,6 +108,7 @@ public class TelaAdmin extends JFrame {
         abas.addTab("Produtos", criarAbaProdutos());
         abas.addTab("Sessões", criarAbaSessoes());
         abas.addTab("Pedidos", criarAbaPedidos());
+        abas.addTab("Auditoria", criarAbaAuditoria());
         abas.addChangeListener(e -> recarregarAbaSelecionada(abas.getSelectedIndex()));
         setContentPane(TemaAstra.areaPrincipal("Painel administrativo", admin.getNome(), abas));
 
@@ -92,6 +116,7 @@ public class TelaAdmin extends JFrame {
         carregarProdutos();
         carregarSessoes();
         carregarPedidos();
+        carregarAuditoria();
     }
 
     private void recarregarAbaSelecionada(int indice) {
@@ -99,7 +124,8 @@ public class TelaAdmin extends JFrame {
             case 0: carregarFilmes(); break;
             case 1: carregarProdutos(); break;
             case 2: carregarFilmes(); carregarSessoes(); break;
-            default: carregarPedidos(); break;
+            case 3: carregarPedidos(); break;
+            default: carregarAuditoria(); break;
         }
     }
 
@@ -306,7 +332,7 @@ public class TelaAdmin extends JFrame {
 
     /** Pergunta quantas unidades chegaram e soma ao estoque (a soma é feita pelo banco, em uma instrução). */
     private void abrirReposicaoDeEstoque(Produto produto) {
-        JSpinner quantidade = new JSpinner(new SpinnerNumberModel(10, 1, 1_000_000, 1));
+        JSpinner quantidade = new JSpinner(new SpinnerNumberModel(10, 1, ProdutoService.LIMITE_DE_REPOSICAO, 1));
         JPanel form = formularioEmGrade();
         adicionar(form, 0, 0, 2, "Produto", TemaAstra.rotulo(produto.getNome() + "  •  estoque atual: " + produto.getEstoque()));
         adicionar(form, 0, 1, 1, "Unidades recebidas", quantidade);
@@ -477,7 +503,7 @@ public class TelaAdmin extends JFrame {
     }
 
     private void carregarPedidos() {
-        executar(this, pedidoService::listarTodos, lista -> {
+        executar(this, () -> pedidoService.listarTodos(admin), lista -> {
             pedidosListados.clear();
             pedidosListados.addAll(lista);
             pedidosModelo.setRowCount(0);
@@ -499,6 +525,33 @@ public class TelaAdmin extends JFrame {
                     carregarPedidos();
                     TemaAstra.sucesso(this, "Status atualizado.");
                 }, this::carregarPedidos);
+    }
+
+    // =====================================================================
+    // ABA AUDITORIA (somente leitura)
+    // =====================================================================
+
+    private JPanel criarAbaAuditoria() {
+        JTable tabela = criarTabela(auditoriaModelo);
+        // a ação (SESSAO_CANCELADA, COMPRA_CONCLUIDA...) é o dado principal: precisa de coluna larga o bastante
+        tabela.getColumnModel().getColumn(0).setPreferredWidth(170);
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(100);
+        tabela.getColumnModel().getColumn(2).setPreferredWidth(210);
+        tabela.getColumnModel().getColumn(3).setPreferredWidth(480);
+        JButton atualizar = TemaAstra.botaoSecundario("Atualizar lista");
+        atualizar.addActionListener(e -> carregarAuditoria());
+        JPanel p = painelDaLista(tabela, atualizar);
+        return TemaAstra.pagina("Auditoria: quem fez o quê", p);
+    }
+
+    private void carregarAuditoria() {
+        executar(this, () -> trilha.listarRecentes(admin, 300), lista -> {
+            auditoriaModelo.setRowCount(0);
+            for (RegistroDeAuditoria r : lista) {
+                auditoriaModelo.addRow(new Object[]{r.quando().format(FORMATO_DATA_COM_SEGUNDOS),
+                        r.usuarioId() == null ? "-" : r.usuarioId(), r.acao(), r.detalhe()});
+            }
+        });
     }
 
     // =====================================================================

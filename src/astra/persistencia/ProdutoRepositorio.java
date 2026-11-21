@@ -18,14 +18,27 @@ public interface ProdutoRepositorio {
      * PedidoRepositorioJdbc.salvar(); e se você gravar um Produto carregado há tempos, o estoque
      * antigo que está no objeto sobrescreve o valor atual do banco.
      *
+     * @param produto o produto a gravar
      * @return o produto gravado, já com o id definitivo
+     * @throws PersistenciaException se o produto a atualizar não existir ou o banco falhar
      */
     Produto salvar(Produto produto) throws PersistenciaException;
 
-    /** Todos os produtos, em ordem de cadastro. */
+    /**
+     * Lista todos os produtos, em ordem de cadastro.
+     *
+     * @return os produtos da bomboniere
+     * @throws PersistenciaException se o banco falhar
+     */
     List<Produto> listarTodos() throws PersistenciaException;
 
-    /** O produto com esse id, ou vazio se não existir. */
+    /**
+     * Busca um produto pelo id.
+     *
+     * @param id identificador do produto
+     * @return o produto, ou vazio se não existir
+     * @throws PersistenciaException se o banco falhar
+     */
     Optional<Produto> buscarPorId(int id) throws PersistenciaException;
 
     /**

@@ -4,6 +4,9 @@ import astra.excecoes.PersistenciaException;
 import astra.modelo.*;
 import astra.persistencia.*;
 import astra.servico.*;
+import astra.excecoes.AcessoNegadoException;
+import astra.servico.TrilhaDeAuditoria;
+import astra.servico.ControleDeAcesso;
 import astra.servico.pagamento.FormaPagamento;
 import astra.servico.pagamento.FormaPagamentoPix;
 
@@ -53,13 +56,15 @@ public class TesteContaPedido {
         ProdutoRepositorio produtos = new ProdutoRepositorioJdbc(banco);
         SessaoRepositorio sessoes = new SessaoRepositorioJdbc(banco, filmes);
         UsuarioRepositorio usuarios = new UsuarioRepositorioJdbc(banco);
+        ControleDeAcesso acesso = new ControleDeAcesso(usuarios);
+        TrilhaDeAuditoria trilha = new TrilhaDeAuditoria(new AuditoriaRepositorioJdbc(banco), acesso);
         IngressoRepositorio ingressos = new IngressoRepositorioJdbc(banco, sessoes, usuarios);
         PedidoRepositorio pedidos = new PedidoRepositorioJdbc(banco, usuarios, produtos, ingressos);
         List<FormaPagamento> formas = List.of(new FormaPagamentoPix());
-        VendaService venda = new VendaService(formas, pedidos, ingressos, produtos);
-        ContaService contas = new ContaService(usuarios);
-        PedidoService pedidoService = new PedidoService(pedidos);
-        CatalogoCliente catalogo = new AtendimentoCliente(new SessaoService(sessoes), new ProdutoService(produtos), venda, pedidoService);
+        VendaService venda = new VendaService(formas, pedidos, ingressos, produtos, trilha);
+        ContaService contas = new ContaService(usuarios, trilha);
+        PedidoService pedidoService = new PedidoService(pedidos, acesso, trilha);
+        CatalogoCliente catalogo = new AtendimentoCliente(new SessaoService(sessoes, acesso, trilha), new ProdutoService(produtos, acesso, trilha), venda, pedidoService);
 
         // ---------------- ContaService: login ----------------
         check(contas.autenticar("cliente@email.com", "123").get() instanceof Cliente, "login do cliente devolve um Cliente");
@@ -107,7 +112,7 @@ public class TesteContaPedido {
 
         List<Pedido> historico = catalogo.listarPedidosDoCliente(cliente);
         check(historico.size() == 1 && historico.get(0).getStatus() == Pedido.StatusPedido.PAGO, "histórico do cliente: 1 pedido PAGO");
-        check(pedidoService.listarTodos().size() == 1, "o administrador vê o pedido na lista geral");
+        check(pedidoService.listarTodos(admin).size() == 1, "o administrador vê o pedido na lista geral");
         check(catalogo.listarPedidosDoCliente(nova).isEmpty(), "outro cliente não vê esse pedido");
         try { pedidoService.listarPorCliente(null); check(false, "cliente nulo"); }
         catch (IllegalArgumentException e) { check(true, "listar pedidos sem informar o cliente é recusado"); }
@@ -124,7 +129,7 @@ public class TesteContaPedido {
         try { pedidoService.marcarComoPronto(admin, 9999); check(false, "pedido inexistente"); }
         catch (IllegalArgumentException e) { check(e.getMessage().contains("não existe"), "pedido inexistente: \"" + e.getMessage() + "\""); }
         try { pedidoService.marcarComoPronto(null, pedidoId); check(false, "sem admin"); }
-        catch (IllegalArgumentException e) { check(true, "sem administrador não atualiza pedido"); }
+        catch (AcessoNegadoException e) { check(true, "sem administrador não atualiza pedido"); }
 
         // ---------------- I de SOLID: a área do cliente não enxerga operações de administrador ----------------
         StringBuilder metodos = new StringBuilder();

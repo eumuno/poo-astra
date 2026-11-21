@@ -192,6 +192,67 @@ public final class TemaAstra {
         return criarBotao(texto, CARTAO_ALT, TEXTO, false);
     }
 
+    /**
+     * Cria um botão pequeno, como o "−" e o "+" de quantidade. É desenhado à mão (como o botão de poltrona)
+     * para que o texto nunca seja abreviado com "...": os botões comuns reservam margem e espaço de foco
+     * dos dois lados e, em telas com escala de 125% ou 150%, sobra quase nada para o símbolo.
+     * A largura é calculada pela medida do texto e o botão mostra estado desabilitado, foco do teclado e hover.
+     *
+     * @param texto     o símbolo exibido, por exemplo "−" ou "+"
+     * @param descricao o que o botão faz, usada como dica e como nome para leitores de tela
+     * @return o botão pronto para uso
+     */
+    public static JButton botaoCompacto(String texto, String descricao) {
+        JButton botao = new JButton(texto) {
+            @Override
+            protected void paintComponent(Graphics graphics) {
+                Graphics2D g = (Graphics2D) graphics.create();
+                try {
+                    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    boolean ativo = isEnabled();
+                    Color fundo = !ativo ? CARTAO
+                            : getModel().isPressed() ? new Color(37, 26, 54)
+                            : getModel().isRollover() ? new Color(69, 52, 94) : CARTAO_ALT;
+                    g.setColor(fundo);
+                    g.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
+                    g.setColor(BORDA_ESCURO);
+                    g.setStroke(new BasicStroke(1f));
+                    g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 18, 18);
+                    if (isFocusOwner()) {
+                        g.setColor(FOCO);
+                        g.setStroke(new BasicStroke(2f));
+                        g.drawRoundRect(3, 3, getWidth() - 7, getHeight() - 7, 14, 14);
+                    }
+                    g.setFont(getFont());
+                    g.setColor(ativo ? TEXTO : BORDA_ESCURO);
+                    FontMetrics medidas = g.getFontMetrics();
+                    int x = (getWidth() - medidas.stringWidth(getText())) / 2;
+                    int y = (getHeight() - medidas.getHeight()) / 2 + medidas.getAscent();
+                    g.drawString(getText(), x, y);
+                } finally {
+                    g.dispose();
+                }
+            }
+        };
+        botao.setFont(new Font(FAMILIA, Font.BOLD, 20));
+        botao.setForeground(TEXTO);
+        botao.setContentAreaFilled(false);
+        botao.setBorderPainted(false);
+        botao.setOpaque(false);
+        botao.setFocusPainted(false); // o foco é desenhado em paintComponent
+        botao.setRolloverEnabled(true);
+        botao.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        FontMetrics medidas = botao.getFontMetrics(botao.getFont());
+        Dimension tamanho = new Dimension(Math.max(58, medidas.stringWidth(texto) + 28),
+                Math.max(46, medidas.getHeight() + 20));
+        botao.setPreferredSize(tamanho);
+        botao.setMinimumSize(tamanho);
+        botao.setToolTipText(descricao);
+        botao.getAccessibleContext().setAccessibleName(descricao);
+        return botao;
+    }
+
     private static JButton criarBotao(String texto, Color fundo, Color letra, boolean principal) {
         JButton b = new JButton(texto);
         b.setFont(FONTE_BOTAO);
@@ -312,23 +373,35 @@ public final class TemaAstra {
         componente.setBackground(CAMPO);
         componente.setForeground(TEXTO_ESCURO);
         componente.putClientProperty("JComponent.roundRect", true);
-        componente.putClientProperty("JComponent.minimumHeight", 44);
+        // A altura sai da medida real da letra e das bordas do componente. Uma altura fixa de 44 px cortava a
+        // parte de baixo das letras (o "g" de "gmail") em telas com escala de 125% ou 150%, onde a letra e as
+        // margens crescem e a altura fixa, não.
+        FontMetrics medidas = componente.getFontMetrics(FONTE);
+        int alturaNecessaria = medidas.getHeight() + 24; // listas e seletores: letra + folga do contorno e da seta
         if (componente instanceof JTextField campo) {
             campo.setCaretColor(TEXTO_ESCURO);
             campo.setSelectionColor(ROXO_ESCURO);
             campo.setSelectedTextColor(Color.WHITE);
-            campo.setMargin(new Insets(9, 12, 9, 12));
+            campo.setMargin(new Insets(4, 12, 4, 12));
+            Insets bordas = campo.getInsets(); // já inclui a margem e a borda do tema ativo
+            alturaNecessaria = medidas.getHeight() + bordas.top + bordas.bottom + 2;
         }
+        int altura = Math.max(44, alturaNecessaria);
+        componente.putClientProperty("JComponent.minimumHeight", altura);
         if (componente instanceof JComboBox<?> combo) {
-            combo.setRenderer((lista, valor, indice, selecionado, foco) -> {
-                JLabel label = new JLabel(valor == null ? "Selecione..." : valor.toString());
-                label.setOpaque(true);
-                label.setFont(FONTE);
-                label.setBorder(new EmptyBorder(9, 12, 9, 12));
-                label.setBackground(selecionado ? ROXO_ESCURO : CAMPO);
-                label.setForeground(selecionado ? Color.WHITE : TEXTO_ESCURO);
-                return label;
-            });
+            // só troca o desenho padrão: quem definiu um renderer próprio (como o da bomboniere, que mostra
+            // o preço formatado) mantém o seu mesmo que este método seja chamado de novo por TemaAstra.linha
+            if (combo.getRenderer() instanceof javax.swing.plaf.UIResource) {
+                combo.setRenderer((lista, valor, indice, selecionado, foco) -> {
+                    JLabel label = new JLabel(valor == null ? "Selecione..." : valor.toString());
+                    label.setOpaque(true);
+                    label.setFont(FONTE);
+                    label.setBorder(new EmptyBorder(9, 12, 9, 12));
+                    label.setBackground(selecionado ? ROXO_ESCURO : CAMPO);
+                    label.setForeground(selecionado ? Color.WHITE : TEXTO_ESCURO);
+                    return label;
+                });
+            }
             combo.setMaximumRowCount(8);
         }
         if (componente instanceof JSpinner spinner && spinner.getEditor() instanceof JSpinner.DefaultEditor editor) {
@@ -339,8 +412,8 @@ public final class TemaAstra {
             tf.setCaretColor(TEXTO_ESCURO);
         }
         Dimension d = componente.getPreferredSize();
-        componente.setPreferredSize(new Dimension(Math.max(160, d.width), 44));
-        componente.setMinimumSize(new Dimension(120, 44));
+        componente.setPreferredSize(new Dimension(Math.max(160, d.width), altura));
+        componente.setMinimumSize(new Dimension(120, altura));
     }
 
     /**

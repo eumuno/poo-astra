@@ -23,33 +23,59 @@ import java.time.format.DateTimeFormatter;
 public class TelaCliente extends JFrame {
     private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    /** Cliente que fez login. */
     private final Cliente cliente;
+    /** O que a área do cliente pode fazer (consultar, montar o pedido e pagar). */
     private final CatalogoCliente catalogo;
+    /** Pedido aberto, o carrinho atual. */
     private Pedido pedido;
+    /** Seletor das sessões à venda. */
     private final JComboBox<Sessao> comboSessoes = new JComboBox<>();
+    /** Seletor dos produtos da bomboniere. */
     private final JComboBox<Produto> comboProdutos = new JComboBox<>();
+    /** Texto com preço, estoque e quanto ainda pode ser adicionado. */
     private final JLabel estoqueProduto = TemaAstra.destaque("Consulte os produtos disponíveis.");
+    /** Quantidade do produto que será adicionada ao carrinho. */
     private final JSpinner quantidadeProduto = new JSpinner(new SpinnerNumberModel(1, 1, 1, 1));
-    private final JButton diminuirQuantidade = TemaAstra.botaoSecundario("−");
-    private final JButton aumentarQuantidade = TemaAstra.botaoSecundario("+");
+    /** Botão que diminui a quantidade na bomboniere. */
+    private final JButton diminuirQuantidade = TemaAstra.botaoCompacto("−", "Diminuir a quantidade");
+    /** Botão que aumenta a quantidade na bomboniere. */
+    private final JButton aumentarQuantidade = TemaAstra.botaoCompacto("+", "Aumentar a quantidade");
+    /** Botão que põe o produto escolhido no carrinho. */
     private final JButton adicionarProduto = TemaAstra.botao("Adicionar ao carrinho");
+    /** Verdadeiro enquanto a lista de produtos está sendo recarregada. */
     private boolean carregandoProdutos;
+    /** Verdadeiro enquanto o estoque é conferido no banco. */
     private boolean conferindoEstoque;
+    /** Número da consulta de produtos mais recente (descarta respostas antigas). */
     private long versaoProdutos;
+    /** Grade de botões das poltronas. */
     private final JPanel grade = new JPanel(new GridLayout(0, 5, 10, 10));
+    /** Texto com a sala e o preço da sessão escolhida. */
     private final JLabel precoSessao = TemaAstra.rotulo("Selecione uma sessão para consultar as poltronas.");
+    /** Texto com a poltrona selecionada. */
     private final JLabel assentoEscolhido = TemaAstra.destaque("Nenhuma poltrona selecionada");
+    /** Total mostrado no carrinho. */
     private final JLabel total = TemaAstra.titulo("Total: R$ 0,00");
+    /** Total mostrado na aba de pagamento. */
     private final JLabel totalPagamento = TemaAstra.titulo("Total: R$ 0,00");
+    /** As abas da área do cliente. */
     private final JTabbedPane abas = new JTabbedPane();
+    /** Linhas da tabela do carrinho. */
     private final DefaultTableModel itensModelo = new DefaultTableModel(new String[]{"Item", "Quantidade", "Valor"}, 0) {
         @Override public boolean isCellEditable(int linha, int coluna) { return false; }
     };
+    /** Ingressos e itens do carrinho, na mesma ordem das linhas da tabela. */
     private final List<Object> itensTabela = new ArrayList<>();
+    /** Painel com a tabela de compras anteriores. */
     private final JPanel historico = TemaAstra.painel();
+    /** Poltronas da sessão escolhida que o banco informa como vendidas. */
     private final Set<Integer> ocupadosNoBanco = new HashSet<>();
+    /** Poltrona selecionada, ou -1 se nenhuma. */
     private int numeroSelecionado = -1;
+    /** Número da consulta de poltronas mais recente (descarta respostas antigas). */
     private long versaoConsulta = 0;
+    /** Verdadeiro enquanto a lista de sessões está sendo recarregada. */
     private boolean carregandoSessoes;
 
     /**
@@ -288,8 +314,6 @@ public class TelaCliente extends JFrame {
         TemaAstra.prepararEntrada(quantidadeProduto);
         quantidadeProduto.setPreferredSize(new Dimension(104, 44));
         quantidadeProduto.setToolTipText("Digite a quantidade desejada, limitada pelo estoque disponível.");
-        diminuirQuantidade.setPreferredSize(new Dimension(58, 46));
-        aumentarQuantidade.setPreferredSize(new Dimension(58, 46));
         JPanel contador = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         contador.setOpaque(false);
         contador.add(diminuirQuantidade);
@@ -452,8 +476,28 @@ public class TelaCliente extends JFrame {
         JButton remover = TemaAstra.botaoSecundario("Remover selecionado");
         remover.setToolTipText("Selecione uma linha para retirar um produto ou ingresso.");
         remover.setEnabled(false);
+        JButton menos = TemaAstra.botaoCompacto("−", "Diminuir a quantidade do produto selecionado");
+        JButton mais = TemaAstra.botaoCompacto("+", "Aumentar a quantidade do produto selecionado");
+        menos.setEnabled(false);
+        mais.setEnabled(false);
         tabela.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) remover.setEnabled(tabela.getSelectedRow() >= 0);
+            if (e.getValueIsAdjusting()) return;
+            int linha = tabela.getSelectedRow();
+            remover.setEnabled(linha >= 0);
+            // a quantidade só se aplica a produto: um ingresso é sempre uma poltrona
+            Object escolhido = linha >= 0 ? itensTabela.get(tabela.convertRowIndexToModel(linha)) : null;
+            mais.setEnabled(escolhido instanceof ItemPedido);
+            menos.setEnabled(escolhido instanceof ItemPedido ip && ip.getQuantidade() > 1);
+        });
+        menos.addActionListener(e -> alterarQuantidadeNoCarrinho(tabela, -1, menos, mais, remover));
+        mais.addActionListener(e -> alterarQuantidadeNoCarrinho(tabela, +1, menos, mais, remover));
+        tabela.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("typed +"), "maisUm");
+        tabela.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("typed -"), "menosUm");
+        tabela.getActionMap().put("maisUm", new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { if (mais.isEnabled()) mais.doClick(); }
+        });
+        tabela.getActionMap().put("menosUm", new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { if (menos.isEnabled()) menos.doClick(); }
         });
         remover.addActionListener(e -> {
             int i = tabela.getSelectedRow();
@@ -473,9 +517,44 @@ public class TelaCliente extends JFrame {
                 if (remover.isEnabled()) remover.doClick();
             }
         });
-        rodape.add(remover, BorderLayout.WEST); rodape.add(total, BorderLayout.EAST);
+        JPanel acoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0)); acoes.setOpaque(false);
+        acoes.add(remover); acoes.add(menos); acoes.add(mais);
+        rodape.add(acoes, BorderLayout.WEST); rodape.add(total, BorderLayout.EAST);
         p.add(rodape, BorderLayout.SOUTH);
         return TemaAstra.pagina("Revise seu carrinho", p);
+    }
+
+    /**
+     * Soma ou subtrai uma unidade do produto selecionado no carrinho. Enquanto o serviço confere o estoque,
+     * os botões ficam desabilitados; ao terminar, a mesma linha volta selecionada. Se faltar estoque, a
+     * mensagem é a mesma de quando o cliente tenta pagar.
+     */
+    private void alterarQuantidadeNoCarrinho(JTable tabela, int variacao, JButton menos, JButton mais, JButton remover) {
+        int visual = tabela.getSelectedRow();
+        if (visual < 0) return;
+        Object escolhido = itensTabela.get(tabela.convertRowIndexToModel(visual));
+        if (!(escolhido instanceof ItemPedido item)) return;
+        Pedido pedidoAtual = pedido;
+        int nova = item.getQuantidade() + variacao;
+        menos.setEnabled(false); mais.setEnabled(false); remover.setEnabled(false);
+        new SwingWorker<ItemPedido, Void>() {
+            @Override protected ItemPedido doInBackground() throws Exception {
+                return catalogo.alterarQuantidade(pedidoAtual, item, nova);
+            }
+            @Override protected void done() {
+                ItemPedido paraSelecionar = item; // se falhar, o item continua o mesmo
+                try {
+                    paraSelecionar = get();
+                } catch (Exception ex) {
+                    mostrarFalhaDaCompra(ex);
+                }
+                if (pedidoAtual != pedido) return;
+                atualizarResumo();
+                for (int i = 0; i < itensTabela.size(); i++) {
+                    if (itensTabela.get(i) == paraSelecionar) { tabela.setRowSelectionInterval(i, i); break; }
+                }
+            }
+        }.execute();
     }
 
     private JPanel criarPagamento() {

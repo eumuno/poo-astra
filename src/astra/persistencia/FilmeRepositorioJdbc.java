@@ -20,6 +20,12 @@ public class FilmeRepositorioJdbc implements FilmeRepositorio {
 
     private final ConexaoBanco banco;
 
+    /**
+     * Cria o repositório com as dependências recebidas.
+     *
+     * @param banco banco de onde as conexões são abertas
+     * @throws IllegalArgumentException se alguma dependência for nula
+     */
     public FilmeRepositorioJdbc(ConexaoBanco banco) {
         if (banco == null) {
             throw new IllegalArgumentException("A conexão com o banco é obrigatória!");

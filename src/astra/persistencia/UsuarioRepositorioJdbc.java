@@ -26,6 +26,12 @@ public class UsuarioRepositorioJdbc implements UsuarioRepositorio {
 
     private final ConexaoBanco banco;
 
+    /**
+     * Cria o repositório com as dependências recebidas.
+     *
+     * @param banco banco de onde as conexões são abertas
+     * @throws IllegalArgumentException se alguma dependência for nula
+     */
     public UsuarioRepositorioJdbc(ConexaoBanco banco) {
         if (banco == null) {
             throw new IllegalArgumentException("A conexão com o banco é obrigatória!");
@@ -122,17 +128,39 @@ public class UsuarioRepositorioJdbc implements UsuarioRepositorio {
             return Optional.empty();
         }
         String sql = "SELECT " + COLUNAS + " FROM usuario WHERE lower(email) = lower(?)";
+        Usuario autenticado;
+        String hashGravado;
         try (Connection con = banco.abrirConexao();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, email.trim());
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next() && CriptografiaSenha.confere(senhaPura, rs.getString("senha_hash"))) {
-                    return Optional.of(mapear(rs));
+                hashGravado = rs.next() ? rs.getString("senha_hash") : null;
+                if (hashGravado == null || !CriptografiaSenha.confere(senhaPura, hashGravado)) {
+                    return Optional.empty(); // e-mail inexistente OU senha errada: não diz qual
                 }
-                return Optional.empty(); // e-mail inexistente OU senha errada: não diz qual
+                autenticado = mapear(rs);
             }
         } catch (SQLException e) {
             throw new PersistenciaException("Erro ao autenticar o usuário.", e);
+        }
+        if (CriptografiaSenha.precisaAtualizar(hashGravado)) {
+            atualizarHash(autenticado.getId(), senhaPura); // conta antiga: troca o SHA-256 sem sal pelo PBKDF2 com sal
+        }
+        return Optional.of(autenticado);
+    }
+
+    /**
+     * Regrava o hash da senha no formato atual. Só acontece depois de a senha ter sido conferida, que é o único
+     * momento em que ela está disponível. Se falhar, o login continua valendo e o hash antigo fica como estava.
+     */
+    private void atualizarHash(int usuarioId, String senhaPura) {
+        try (Connection con = banco.abrirConexao();
+             PreparedStatement ps = con.prepareStatement("UPDATE usuario SET senha_hash = ? WHERE id = ?")) {
+            ps.setString(1, CriptografiaSenha.gerarHash(senhaPura));
+            ps.setInt(2, usuarioId);
+            ps.executeUpdate();
+        } catch (SQLException | PersistenciaException e) {
+            System.err.println("Não foi possível atualizar o hash da conta " + usuarioId + ": " + e.getMessage());
         }
     }
 

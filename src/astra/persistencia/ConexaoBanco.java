@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -44,6 +45,7 @@ import java.util.List;
  */
 public class ConexaoBanco {
 
+    /** URL JDBC usada quando nada é informado: o arquivo {@code astra.db} na pasta de execução. */
     public static final String URL_PADRAO = "jdbc:sqlite:astra.db";
 
     private static final String SCRIPT_SCHEMA = "sql/schema.sql";
@@ -57,7 +59,12 @@ public class ConexaoBanco {
         this(System.getProperty("astra.banco.url", URL_PADRAO));
     }
 
-    /** Usa a URL JDBC informada (útil para testes com um arquivo temporário). */
+    /**
+     * Usa a URL JDBC informada (útil para testes com um arquivo temporário).
+     *
+     * @param url a URL JDBC, por exemplo {@code jdbc:sqlite:teste.db}
+     * @throws IllegalArgumentException se a URL for nula ou estiver em branco
+     */
     public ConexaoBanco(String url) {
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("A URL do banco é obrigatória!");
@@ -68,6 +75,9 @@ public class ConexaoBanco {
     /**
      * Abre uma nova conexão. Quem chama é responsável por fechá-la
      * (use try-with-resources).
+     *
+     * @return a conexão aberta, com as chaves estrangeiras ligadas
+     * @throws PersistenciaException se não for possível conectar (por exemplo, driver fora do classpath)
      */
     public Connection abrirConexao() throws PersistenciaException {
         try {
@@ -79,7 +89,9 @@ public class ConexaoBanco {
             return conexao;
         } catch (SQLException e) {
             throw new PersistenciaException(
-                    "Não foi possível conectar ao banco de dados (" + url + "). "
+                    // a URL (que mostra o caminho do arquivo) fica só na causa, para quem depura: esta mensagem
+                    // chega à tela do usuário e não deve revelar onde o banco está
+                    "Não foi possível conectar ao banco de dados. "
                             + "Verifique se o driver lib/sqlite-jdbc está no classpath.", e);
         }
     }
@@ -87,7 +99,10 @@ public class ConexaoBanco {
     /**
      * Cria as tabelas que ainda não existem (schema.sql) e, se o banco
      * estiver vazio, insere os dados iniciais (seed.sql). Pode ser chamado
-     * toda vez que o sistema abre: não apaga dados existentes.
+     * toda vez que o sistema abre: não apaga dados existentes. Ao terminar, deixa o arquivo do banco
+     * legível só pelo dono, quando o sistema operacional permite.
+     *
+     * @throws PersistenciaException se um dos scripts não for encontrado ou o banco falhar
      */
     public void inicializar() throws PersistenciaException {
         try (Connection conexao = abrirConexao()) {
@@ -105,8 +120,35 @@ public class ConexaoBanco {
         } catch (SQLException e) {
             throw new PersistenciaException("Erro ao inicializar o banco de dados.", e);
         }
+        restringirPermissoesDoArquivo();
     }
 
+    /**
+     * Deixa o arquivo do banco legível e gravável só pelo dono (permissão 600). O arquivo guarda CPFs, e-mails e
+     * hashes de senha, e por padrão um arquivo novo costuma ficar legível por outros usuários da mesma máquina.
+     * Só tem efeito em sistemas com permissões POSIX (Linux e macOS); no Windows, quem protege o arquivo é a
+     * permissão da pasta do usuário, e esta chamada não faz nada. Falhar aqui nunca impede o sistema de abrir.
+     */
+    private void restringirPermissoesDoArquivo() {
+        String prefixo = "jdbc:sqlite:";
+        if (!url.startsWith(prefixo)) {
+            return;
+        }
+        Path arquivo = Paths.get(url.substring(prefixo.length()));
+        try {
+            if (Files.exists(arquivo)) {
+                Files.setPosixFilePermissions(arquivo, PosixFilePermissions.fromString("rw-------"));
+            }
+        } catch (UnsupportedOperationException | IOException | IllegalArgumentException e) {
+            // sistema sem permissões POSIX, ou URL que não aponta para um arquivo comum: nada a restringir
+        }
+    }
+
+    /**
+     * Informa a URL JDBC em uso.
+     *
+     * @return a URL, por exemplo {@code jdbc:sqlite:astra.db}
+     */
     public String getUrl() {
         return url;
     }

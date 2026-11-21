@@ -26,6 +26,14 @@ public class IngressoRepositorioJdbc implements IngressoRepositorio {
     private final SessaoRepositorio sessoes;
     private final UsuarioRepositorio usuarios;
 
+    /**
+     * Cria o repositório com as dependências recebidas.
+     *
+     * @param banco banco de onde as conexões são abertas
+     * @param sessoes sessões usadas para montar a sessão de cada ingresso
+     * @param usuarios usuários usados para montar o cliente de cada ingresso
+     * @throws IllegalArgumentException se alguma dependência for nula
+     */
     public IngressoRepositorioJdbc(ConexaoBanco banco, SessaoRepositorio sessoes, UsuarioRepositorio usuarios) {
         if (banco == null || sessoes == null || usuarios == null) {
             throw new IllegalArgumentException("A conexão e os repositórios de sessão e de usuário são obrigatórios!");

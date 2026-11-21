@@ -32,19 +32,40 @@ public interface PedidoRepositorio {
     Pedido salvar(Pedido pedido, Pagamento pagamento)
             throws PersistenciaException, AssentoIndisponivelException, EstoqueInsuficienteException;
 
-    /** O pedido com esse id (itens e ingressos carregados), ou vazio se não existir. */
+    /**
+     * Busca um pedido pelo id.
+     *
+     * @param id identificador do pedido
+     * @return o pedido (itens e ingressos carregados), ou vazio se não existir
+     * @throws PersistenciaException se o banco falhar
+     */
     Optional<Pedido> buscarPorId(int id) throws PersistenciaException;
 
-    /** Os pedidos de um cliente, do mais recente para o mais antigo. */
+    /**
+     * Lista os pedidos de um cliente, do mais recente para o mais antigo.
+     *
+     * @param clienteId identificador do cliente
+     * @return os pedidos do cliente
+     * @throws PersistenciaException se o banco falhar
+     */
     List<Pedido> listarPorCliente(int clienteId) throws PersistenciaException;
 
-    /** Todos os pedidos, do mais recente para o mais antigo (tela do administrador). */
+    /**
+     * Lista todos os pedidos, do mais recente para o mais antigo (tela do administrador).
+     *
+     * @return todos os pedidos
+     * @throws PersistenciaException se o banco falhar
+     */
     List<Pedido> listarTodos() throws PersistenciaException;
 
     /**
      * Grava o novo status de um pedido que já existe (PAGO, PRONTO, RETIRADO...).
      * A regra de quais transições são válidas continua no Pedido (marcarComoPronto, retirar...):
-     * a tela chama o método do Pedido e depois manda gravar o status resultante.
+     * quem chama usa o método do Pedido e depois manda gravar o status resultante.
+     *
+     * @param pedidoId   identificador do pedido
+     * @param novoStatus o status a gravar
+     * @throws PersistenciaException se o pedido não existir ou o banco falhar
      */
     void atualizarStatus(int pedidoId, Pedido.StatusPedido novoStatus) throws PersistenciaException;
 }

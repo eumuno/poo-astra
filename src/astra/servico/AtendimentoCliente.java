@@ -7,6 +7,7 @@ import astra.excecoes.PagamentoException;
 import astra.excecoes.PersistenciaException;
 import astra.modelo.Cliente;
 import astra.modelo.Ingresso;
+import astra.modelo.ItemPedido;
 import astra.modelo.Pagamento;
 import astra.modelo.Pedido;
 import astra.modelo.Produto;
@@ -77,6 +78,12 @@ public class AtendimentoCliente implements CatalogoCliente {
     @Override
     public void adicionarProduto(Pedido pedido, Produto produto, int quantidade) {
         vendas.adicionarProduto(pedido, produto, quantidade);
+    }
+
+    @Override
+    public ItemPedido alterarQuantidade(Pedido pedido, ItemPedido item, int novaQuantidade)
+            throws EstoqueInsuficienteException, PersistenciaException {
+        return vendas.alterarQuantidade(pedido, item, novaQuantidade);
     }
 
     @Override

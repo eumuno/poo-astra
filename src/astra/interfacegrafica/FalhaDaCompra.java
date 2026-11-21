@@ -25,11 +25,23 @@ import java.util.concurrent.ExecutionException;
  */
 public record FalhaDaCompra(String titulo, String texto, Gravidade gravidade, Destino destino) {
 
-    /** AVISO: algo que o próprio cliente resolve. ERRO: falha do sistema. */
-    public enum Gravidade { AVISO, ERRO }
+    /** Quão grave é a falha, o que decide o ícone e o tom da janela. */
+    public enum Gravidade {
+        /** Algo que o próprio cliente resolve (poltrona vendida, estoque, pagamento recusado). */
+        AVISO,
+        /** Falha do sistema (banco fora do ar, erro inesperado). */
+        ERRO
+    }
 
     /** Para onde a tela leva o cliente depois de mostrar a mensagem. */
-    public enum Destino { FICAR, INGRESSOS, CARRINHO }
+    public enum Destino {
+        /** Continua onde está. */
+        FICAR,
+        /** Vai para a aba de ingressos, para escolher outra poltrona. */
+        INGRESSOS,
+        /** Vai para o carrinho, para ajustar ou remover itens. */
+        CARRINHO
+    }
 
     /**
      * Classifica a exceção que interrompeu a compra.
@@ -78,7 +90,12 @@ public record FalhaDaCompra(String titulo, String texto, Gravidade gravidade, De
         return limpo.endsWith(".") ? limpo.substring(0, limpo.length() - 1) : limpo;
     }
 
-    /** O SwingWorker devolve a exceção original dentro de uma ExecutionException: tira a casca. */
+    /**
+     * O SwingWorker devolve a exceção original dentro de uma ExecutionException: tira a casca.
+     *
+     * @param erro a exceção recebida (possivelmente embrulhada)
+     * @return a exceção original que causou a falha
+     */
     public static Throwable desembrulhar(Throwable erro) {
         Throwable atual = erro;
         while (atual instanceof ExecutionException && atual.getCause() != null) {
