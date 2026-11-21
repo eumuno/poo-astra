@@ -49,7 +49,7 @@ public class UsuarioRepositorioJdbc implements UsuarioRepositorio {
         String cpf = null;
         if (usuario instanceof Cliente) {
             tipo = TIPO_CLIENTE;
-            cpf = ((Cliente) usuario).getCpf();
+            cpf = somenteDigitos(((Cliente) usuario).getCpf()); // "111.111.111-11" e "11111111111" são o mesmo CPF
         } else if (usuario instanceof Administrador) {
             tipo = TIPO_ADMINISTRADOR;
         } else {
@@ -62,7 +62,7 @@ public class UsuarioRepositorioJdbc implements UsuarioRepositorio {
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, tipo);
             ps.setString(2, usuario.getNome());
-            ps.setString(3, usuario.getEmail());
+            ps.setString(3, usuario.getEmail().trim());
             ps.setString(4, hash);
             ps.setString(5, cpf);
             ps.executeUpdate();
@@ -70,11 +70,15 @@ public class UsuarioRepositorioJdbc implements UsuarioRepositorio {
                 if (!chaves.next()) {
                     throw new PersistenciaException("O banco não devolveu o id do usuário gravado.");
                 }
-                return montar(chaves.getInt(1), tipo, usuario.getNome(), usuario.getEmail(), hash, cpf);
+                return montar(chaves.getInt(1), tipo, usuario.getNome(), usuario.getEmail().trim(), hash, cpf);
             }
         } catch (SQLException e) {
-            if (e.getMessage() != null && e.getMessage().contains("UNIQUE")) {
-                throw new PersistenciaException("Já existe um usuário com o e-mail " + usuario.getEmail() + ".", e);
+            String detalhe = e.getMessage() == null ? "" : e.getMessage();
+            if (detalhe.contains("UNIQUE")) {
+                if (detalhe.contains("cpf")) {
+                    throw new PersistenciaException("Já existe uma conta cadastrada com este CPF.", e);
+                }
+                throw new PersistenciaException("Já existe uma conta cadastrada com o e-mail " + usuario.getEmail().trim() + ".", e);
             }
             throw new PersistenciaException("Erro ao gravar o usuário " + usuario.getEmail() + ".", e);
         }
@@ -133,6 +137,11 @@ public class UsuarioRepositorioJdbc implements UsuarioRepositorio {
     }
 
     // ------------------------------------------------------------------
+
+    /** Remove pontos, traços e espaços do CPF; devolve null se não houver CPF (administrador). */
+    private static String somenteDigitos(String cpf) {
+        return cpf == null ? null : cpf.replaceAll("\\D", "");
+    }
 
     private Usuario mapear(ResultSet rs) throws SQLException {
         return montar(rs.getInt("id"), rs.getString("tipo"), rs.getString("nome"),
