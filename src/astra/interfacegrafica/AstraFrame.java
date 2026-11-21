@@ -1,30 +1,45 @@
 package astra.interfacegrafica;
 
 import astra.modelo.*;
-import astra.persistencia.*;
 import astra.servico.*;
 import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.ExecutionException;
 
-/** Entrada e autenticação do Cinema Astra, com credenciais reais do SQLite. */
+/**
+ * Tela de entrada do Cinema Astra: escolha do perfil, login e criação de conta de cliente.
+ *
+ * <p>A tela só lê o que foi digitado e abre a área certa. A conferência de senha e as regras do
+ * cadastro estão em {@link ContaService}; a tela não conhece nenhuma classe de persistência.</p>
+ */
 public class AstraFrame extends JFrame {
+    private final ContaService contas;
     private final FilmeService filmes;
     private final ProdutoService produtos;
     private final SessaoService sessoes;
-    private final VendaService vendas;
-    private final UsuarioRepositorio usuarios;
-    private final PedidoRepositorio pedidos;
-    private final IngressoRepositorio ingressos;
+    private final PedidoService pedidos;
+    private final CatalogoCliente catalogo;
 
-    public AstraFrame(FilmeService filmes, ProdutoService produtos, SessaoService sessoes,
-                      VendaService vendas, UsuarioRepositorio usuarios,
-                      PedidoRepositorio pedidos, IngressoRepositorio ingressos) {
-        this.filmes = filmes; this.produtos = produtos; this.sessoes = sessoes;
-        this.vendas = vendas; this.usuarios = usuarios;
-        this.pedidos = pedidos; this.ingressos = ingressos;
+    /**
+     * Monta a tela inicial. Os serviços são entregues às áreas do administrador e do cliente
+     * quando o login é aceito.
+     *
+     * @param contas   login e criação de conta
+     * @param filmes   casos de uso de filmes (área do administrador)
+     * @param produtos casos de uso de produtos (área do administrador)
+     * @param sessoes  casos de uso de sessões (área do administrador)
+     * @param pedidos  acompanhamento de pedidos (área do administrador)
+     * @param catalogo o que a área do cliente pode fazer
+     */
+    public AstraFrame(ContaService contas, FilmeService filmes, ProdutoService produtos,
+                      SessaoService sessoes, PedidoService pedidos, CatalogoCliente catalogo) {
+        this.contas = contas;
+        this.filmes = filmes;
+        this.produtos = produtos;
+        this.sessoes = sessoes;
+        this.pedidos = pedidos;
+        this.catalogo = catalogo;
         TemaAstra.configurarJanela(this, "Boas-vindas", 1050, 720);
-        setMinimumSize(new Dimension(980, 700));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         mostrarInicio();
     }
@@ -137,15 +152,10 @@ public class AstraFrame extends JFrame {
 
     private void autenticar(String email, String senha, boolean admin, JButton botao,
                             JTextField emailCampo, JPasswordField senhaCampo) {
-        if (email.isBlank() || senha.isBlank()) {
-            TemaAstra.erro(this, "Preencha e-mail e senha.");
-            (email.isBlank() ? emailCampo : senhaCampo).requestFocusInWindow();
-            return;
-        }
         botao.setEnabled(false);
         new SwingWorker<Usuario, Void>() {
             @Override protected Usuario doInBackground() throws Exception {
-                return usuarios.autenticar(email, senha).orElse(null);
+                return contas.autenticar(email, senha).orElse(null);
             }
             @Override protected void done() {
                 botao.setEnabled(true);
@@ -164,7 +174,7 @@ public class AstraFrame extends JFrame {
                     if (usuario instanceof Administrador a) {
                         new TelaAdmin(a, filmes, produtos, sessoes, pedidos).setVisible(true);
                     } else {
-                        new TelaCliente((Cliente) usuario, produtos, sessoes, vendas, ingressos, pedidos).setVisible(true);
+                        new TelaCliente((Cliente) usuario, catalogo).setVisible(true);
                     }
                     // Evita várias janelas idênticas e mantém o caminho de retorno claro.
                     dispose();
@@ -173,7 +183,12 @@ public class AstraFrame extends JFrame {
                     TemaAstra.erro(AstraFrame.this, "A autenticação foi interrompida.");
                 } catch (ExecutionException ex) {
                     Throwable causa = ex.getCause() == null ? ex : ex.getCause();
-                    TemaAstra.erro(AstraFrame.this, "Falha ao consultar o banco: " + causa.getMessage());
+                    if (causa instanceof IllegalArgumentException) { // campo em branco: o serviço explica
+                        TemaAstra.erro(AstraFrame.this, causa.getMessage());
+                        (email.isBlank() ? emailCampo : senhaCampo).requestFocusInWindow();
+                    } else {
+                        TemaAstra.erro(AstraFrame.this, "Falha ao consultar o banco: " + causa.getMessage());
+                    }
                 }
             }
         }.execute();
@@ -194,18 +209,14 @@ public class AstraFrame extends JFrame {
         TemaAstra.acoes(form, 4, voltar, salvar);
         voltar.addActionListener(e -> mostrarLogin(false));
         salvar.addActionListener(e -> {
-            String n = nome.getText().trim();
-            String em = email.getText().trim();
-            String cp = cpf.getText().replaceAll("\\D", "");
+            String n = nome.getText();
+            String em = email.getText();
+            String cp = cpf.getText();
             String s = new String(senha.getPassword());
-            if (n.isBlank() || !em.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$") || cp.length() != 11 || s.length() < 6) {
-                TemaAstra.erro(this, "Informe nome, e-mail válido, CPF com 11 dígitos e senha de 6 ou mais caracteres.");
-                return;
-            }
-            salvar.setEnabled(false);
+            salvar.setEnabled(false); // as regras do cadastro (e-mail, CPF, senha) são conferidas pelo ContaService
             new SwingWorker<Usuario, Void>() {
                 @Override protected Usuario doInBackground() throws Exception {
-                    return usuarios.salvar(new Cliente(0, n, em, "", cp), s);
+                    return contas.cadastrarCliente(n, em, cp, s);
                 }
                 @Override protected void done() {
                     salvar.setEnabled(true);
