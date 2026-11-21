@@ -50,7 +50,7 @@ public class Pedido {
             throw new IllegalArgumentException("O pedido deve ter um cliente associado.");
         }
         if (data == null || status == null) {
-            throw new IllegalArgumentException("Data e status do pedido sao obrigatorios.");
+            throw new IllegalArgumentException("Data e status do pedido são obrigatórios.");
         }
         this.id = id;
         this.cliente = cliente;
@@ -111,7 +111,7 @@ public class Pedido {
     public void adicionarItem(ItemPedido item) {
         validarPedidoAberto();
         if (item == null) {
-            throw new IllegalArgumentException("Item invalido para adicao.");
+            throw new IllegalArgumentException("Item inválido para adição.");
         }
         this.itens.add(item);
     }
@@ -138,7 +138,7 @@ public class Pedido {
     public void adicionarIngresso(Ingresso ingresso) {
         validarPedidoAberto();
         if (ingresso == null) {
-            throw new IllegalArgumentException("Ingresso invalido para adicao.");
+            throw new IllegalArgumentException("Ingresso inválido para adição.");
         }
         this.ingressos.add(ingresso);
     }
@@ -207,6 +207,22 @@ public class Pedido {
     }
 
     /**
+     * Desfaz o {@link #confirmarPagamento()}: o pedido volta de PAGO para ABERTO.
+     *
+     * <p>Serve para um único caso: o pagamento foi aprovado, mas a venda NÃO conseguiu ser
+     * gravada no banco. Sem isso o pedido ficaria PAGO só na memória e o cliente não
+     * conseguiria tentar de novo (todo método que mexe no pedido exige que ele esteja aberto).</p>
+     *
+     * @throws IllegalStateException se o pedido não estiver PAGO ou se já foi gravado (id maior que 0)
+     */
+    public void desfazerConfirmacaoPagamento() {
+        if (this.status != StatusPedido.PAGO || this.id > 0) {
+            throw new IllegalStateException("Só um pedido pago que ainda não foi gravado pode voltar a ficar aberto.");
+        }
+        this.status = StatusPedido.ABERTO;
+    }
+
+    /**
      * Marca o pedido como pronto para retirada.
      *
      * @throws IllegalStateException se o pedido não estiver PAGO
@@ -225,7 +241,7 @@ public class Pedido {
      */
     public void retirar() {
         if (this.status != StatusPedido.PRONTO) {
-            throw new IllegalStateException("O pedido so pode ser retirado quando estiver pronto.");
+            throw new IllegalStateException("O pedido só pode ser retirado quando estiver pronto.");
         }
         this.status = StatusPedido.RETIRADO;
     }
@@ -237,14 +253,14 @@ public class Pedido {
      */
     public void cancelar() {
         if (this.status == StatusPedido.PAGO || this.status == StatusPedido.PRONTO || this.status == StatusPedido.RETIRADO) {
-            throw new IllegalStateException("Pedidos pagos ou finalizados nao podem ser cancelados diretamente.");
+            throw new IllegalStateException("Pedidos pagos ou finalizados não podem ser cancelados diretamente.");
         }
         this.status = StatusPedido.CANCELADO;
     }
 
     private void validarPedidoAberto() {
         if (this.status != StatusPedido.ABERTO) {
-            throw new IllegalStateException("Operacao invalida: o pedido nao esta mais aberto.");
+            throw new IllegalStateException("Este pedido já foi fechado e não pode mais ser alterado.");
         }
     }
 

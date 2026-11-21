@@ -319,6 +319,16 @@ public final class TemaAstra {
         JOptionPane.showMessageDialog(pai, mensagem, "Astra | Atenção", JOptionPane.ERROR_MESSAGE);
     }
 
+    /** Algo que o cliente resolve (poltrona vendida, estoque, pagamento recusado): ícone de aviso. */
+    public static void aviso(Component pai, String titulo, String mensagem) {
+        JOptionPane.showMessageDialog(pai, mensagem, "Astra | " + titulo, JOptionPane.WARNING_MESSAGE);
+    }
+
+    /** Falha do sistema (banco fora do ar, erro inesperado): ícone de erro. */
+    public static void erro(Component pai, String titulo, String mensagem) {
+        JOptionPane.showMessageDialog(pai, mensagem, "Astra | " + titulo, JOptionPane.ERROR_MESSAGE);
+    }
+
     public static void sucesso(Component pai, String mensagem) {
         JOptionPane.showMessageDialog(pai, mensagem, "Astra | Tudo certo", JOptionPane.INFORMATION_MESSAGE);
     }

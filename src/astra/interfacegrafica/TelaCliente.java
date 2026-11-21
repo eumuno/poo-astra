@@ -550,11 +550,50 @@ public class TelaCliente extends JFrame {
                     abas.setSelectedIndex(4); // Mostra o comprovante no histórico sem fechar a janela.
                     TemaAstra.sucesso(TelaCliente.this, "Compra de demonstração concluída e salva no banco!");
                 } catch (Exception ex) {
-                    erroDoWorker("Não foi possível concluir o pagamento", ex);
-                    carregarSessoes();
+                    mostrarFalhaDaCompra(ex);
                 }
             }
         }.execute();
+    }
+
+    /**
+     * Único ponto que explica ao cliente por que a compra não foi concluída.
+     * A FalhaDaCompra decide a mensagem; aqui só se mostra e se leva o cliente à aba certa.
+     */
+    private void mostrarFalhaDaCompra(Exception ex) {
+        Throwable causa = FalhaDaCompra.desembrulhar(ex);
+        FalhaDaCompra falha = FalhaDaCompra.classificar(causa);
+
+        if (causa instanceof AssentoIndisponivelException assento) {
+            removerIngressoDoCarrinho(assento.getSessaoId(), assento.getNumeroAssento());
+        }
+        if (causa instanceof EstoqueInsuficienteException) {
+            carregarProdutos(); // o estoque mostrado na bomboniere estava desatualizado
+        }
+        if (falha.gravidade() == FalhaDaCompra.Gravidade.ERRO) {
+            ex.printStackTrace(); // detalhe técnico vai para o console, não para o cliente
+        }
+
+        switch (falha.destino()) {
+            case INGRESSOS -> abas.setSelectedIndex(0); // a troca de aba já recarrega as poltronas
+            case CARRINHO -> abas.setSelectedIndex(2);
+            case FICAR -> atualizarResumo();
+        }
+        if (falha.gravidade() == FalhaDaCompra.Gravidade.ERRO) {
+            TemaAstra.erro(this, falha.titulo(), falha.texto());
+        } else {
+            TemaAstra.aviso(this, falha.titulo(), falha.texto());
+        }
+    }
+
+    /** A poltrona foi vendida para outra pessoa: tira o ingresso dela do carrinho para o cliente escolher outra. */
+    private void removerIngressoDoCarrinho(int sessaoId, int numeroAssento) {
+        for (Ingresso ingresso : new ArrayList<>(pedido.getIngressos())) {
+            if (ingresso.getSessao().getId() == sessaoId && ingresso.getAssento().getNumero() == numeroAssento) {
+                pedido.removerIngresso(ingresso);
+            }
+        }
+        atualizarResumo();
     }
 
     private void carregarSessoes() {

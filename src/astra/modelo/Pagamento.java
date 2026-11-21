@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 
 public abstract class Pagamento {
 
-    public enum Status { PENDENTE, APROVADO, RECUSADO }
+    // ESTORNADO: foi aprovado, mas a venda não pôde ser gravada e o valor foi devolvido.
+    // Um pagamento estornado nunca chega ao banco (o estorno só acontece quando a gravação falhou).
+    public enum Status { PENDENTE, APROVADO, RECUSADO, ESTORNADO }
 
     // Qual é o meio de pagamento (gravado no banco; os valores são os da tabela pagamento)
     public enum Forma { PIX, CARTAO }
@@ -28,9 +30,18 @@ public abstract class Pagamento {
     // Só dá pra mudar o status se ainda estiver pendente
     protected void mudarStatus(Status novo) throws PagamentoException {
         if (status != Status.PENDENTE) {
-            throw new TransicaoStatusInvalidaException("Este pagamento já foi finalizado.");
+            throw new TransicaoStatusInvalidaException("este pagamento já foi finalizado");
         }
         status = novo;
+    }
+
+    // Devolve um pagamento aprovado (simulação). Usado quando a cobrança passou,
+    // mas a venda não foi registrada: o cliente não pode ficar cobrado por algo que não comprou.
+    public void estornar() {
+        if (status != Status.APROVADO) {
+            throw new IllegalStateException("Só um pagamento aprovado pode ser estornado.");
+        }
+        status = Status.ESTORNADO;
     }
 
     public double getValor() { return valor; }

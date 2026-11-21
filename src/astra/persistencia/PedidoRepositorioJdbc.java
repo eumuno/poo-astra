@@ -147,8 +147,7 @@ public class PedidoRepositorioJdbc implements PedidoRepositorio {
                 if (!rs.next()) {
                     throw new PersistenciaException("O produto \"" + produto.getNome() + "\" não existe no banco.");
                 }
-                throw new EstoqueInsuficienteException("Estoque insuficiente de \"" + rs.getString("nome")
-                        + "\": restam " + rs.getInt("estoque") + " e o pedido pede " + item.getQuantidade() + ".");
+                throw new EstoqueInsuficienteException(rs.getString("nome"), rs.getInt("estoque"), item.getQuantidade());
             }
         }
     }
@@ -192,7 +191,7 @@ public class PedidoRepositorioJdbc implements PedidoRepositorio {
             // UNIQUE (sessao_id, assento_id): o próprio banco impede vender o mesmo assento duas vezes
             if (e.getMessage() != null && e.getMessage().contains("UNIQUE")) {
                 throw new AssentoIndisponivelException("O assento " + numeroAssento
-                        + " já foi vendido para esta sessão.");
+                        + " já foi vendido para esta sessão.", sessao.getId(), numeroAssento);
             }
             throw e;
         }
