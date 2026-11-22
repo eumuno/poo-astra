@@ -75,7 +75,8 @@ public abstract class Pagamento {
      * Muda o status do pagamento. Só é permitido enquanto ele ainda estiver pendente.
      *
      * @param novo o novo status
-     * @throws TransicaoStatusInvalidaException se o pagamento já foi finalizado
+     * @throws PagamentoException (mais especificamente {@link TransicaoStatusInvalidaException})
+     *                            se o pagamento já foi finalizado
      */
     protected void mudarStatus(Status novo) throws PagamentoException {
         if (status != Status.PENDENTE) {
