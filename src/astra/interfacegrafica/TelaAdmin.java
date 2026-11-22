@@ -173,8 +173,8 @@ public class TelaAdmin extends JFrame {
         sinopse.setWrapStyleWord(true);
         sinopse.setFont(FONTE_TEXTO);
         sinopse.setBackground(TemaAstra.CAMPO);
-        sinopse.setForeground(TemaAstra.TEXTO_ESCURO);
-        sinopse.setCaretColor(TemaAstra.TEXTO_ESCURO);
+        sinopse.setForeground(TemaAstra.TEXTO);
+        sinopse.setCaretColor(TemaAstra.TEXTO);
         sinopse.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         JScrollPane rolagemSinopse = new JScrollPane(sinopse);
         rolagemSinopse.setPreferredSize(new Dimension(300, 86));

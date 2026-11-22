@@ -10,43 +10,61 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 /**
- * Design system do Cinema Astra (Swing + FlatLaf).
+ * Design system do Cinema Astra (Swing + FlatLaf), na identidade cinematográfica: fundo quase preto,
+ * cartões em roxo profundo, detalhes violeta e dourado, títulos serifados e rótulos monoespaçados.
  * Centraliza cores, tipografia, componentes e tamanhos sem misturar regras do domínio.
  */
 public final class TemaAstra {
-    /** Fundo geral das janelas (roxo quase preto). */
-    public static final Color FUNDO = new Color(15, 12, 25);
-    /** Fundo dos cartões e painéis, um tom acima do fundo. */
-    public static final Color CARTAO = new Color(29, 23, 46);
-    /** Fundo alternativo: botões secundários e destaques sobre o cartão. */
-    public static final Color CARTAO_ALT = new Color(47, 37, 70);
-    /** Cor principal da marca: botões primários e itens selecionados. */
-    public static final Color ROXO = new Color(131, 52, 240); // selecionado: roxo vívido
-    /** Roxo mais escuro, usado em linhas selecionadas e listas. */
-    public static final Color ROXO_ESCURO = new Color(105, 37, 192);
-    /** Cor padrão do texto sobre fundo escuro. */
-    public static final Color TEXTO = new Color(250, 248, 255);
-    /** Texto secundário (rótulos e legendas) sobre fundo escuro. */
-    public static final Color SUAVE = new Color(205, 195, 225);
-    /** Poltrona disponível (verde). */
-    public static final Color LIVRE = new Color(12, 125, 75); // disponível: verde
-    /** Poltrona ocupada (vermelho). */
-    public static final Color OCUPADO = new Color(184, 43, 69); // ocupado: vermelho
-    /** Fundo claro dos campos de entrada. */
-    public static final Color CAMPO = new Color(250, 249, 254);
-    /** Texto sobre fundo claro (campos e tabelas). */
-    public static final Color TEXTO_ESCURO = new Color(33, 27, 47);
-    /** Borda de campos e componentes claros. */
-    public static final Color BORDA = new Color(202, 191, 224);
-    /** Borda discreta dos cartões sobre fundo escuro. */
-    public static final Color BORDA_ESCURO = new Color(68, 53, 91);
+    /** Fundo geral das janelas (quase preto, #07050D). */
+    public static final Color FUNDO = new Color(7, 5, 13);
+    /** Fundo dos cartões e painéis, um tom acima do fundo (#100C1B). */
+    public static final Color CARTAO = new Color(16, 12, 27);
+    /** Fundo alternativo: botões secundários e destaques sobre o cartão (#1F182F). */
+    public static final Color CARTAO_ALT = new Color(31, 24, 47);
+    /** Cor principal da marca: botões primários e itens selecionados (#8334F0). */
+    public static final Color ROXO = new Color(131, 52, 240);
+    /** Violeta luminoso, usado em filetes, destaques e no estado de foco (#B06CFF). */
+    public static final Color ROXO_LUZ = new Color(176, 108, 255);
+    /** Roxo escuro, usado em linhas selecionadas e listas. */
+    public static final Color ROXO_ESCURO = new Color(85, 35, 145);
+    /** Cor padrão do texto sobre fundo escuro (#F6F2FF). */
+    public static final Color TEXTO = new Color(246, 242, 255);
+    /** Texto secundário (rótulos e legendas) sobre fundo escuro (#B9AED3). */
+    public static final Color SUAVE = new Color(185, 174, 211);
+    /** Texto discreto, só para detalhes decorativos e itens desabilitados (#6D6386). */
+    public static final Color DIM = new Color(109, 99, 134);
+    /** Dourado dos pequenos rótulos e da hierarquia visual (#E9C58A). */
+    public static final Color DOURADO = new Color(233, 197, 138);
+    /** Poltrona disponível (verde, #22C07A). */
+    public static final Color LIVRE = new Color(34, 192, 122);
+    /** Poltrona ocupada (vermelho, #E0465F). */
+    public static final Color OCUPADO = new Color(224, 70, 95);
+    /** Fundo dos campos de entrada (escuro, com texto claro). */
+    public static final Color CAMPO = new Color(21, 16, 33);
+    /** Borda de campos e componentes. */
+    public static final Color BORDA = new Color(58, 48, 78);
+    /** Borda discreta dos cartões sobre fundo escuro (#2A2240). */
+    public static final Color BORDA_ESCURO = new Color(42, 34, 64);
     /** Contorno do componente que está com o foco do teclado. */
     public static final Color FOCO = new Color(230, 183, 255);
 
+    // Fontes nativas do Windows, para não depender de arquivos externos.
     private static final String FAMILIA = "Segoe UI";
-    private static final Font FONTE = new Font(FAMILIA, Font.PLAIN, 16);
-    private static final Font FONTE_BOTAO = new Font(FAMILIA, Font.BOLD, 16);
-    private static final Font FONTE_ROTULO = new Font(FAMILIA, Font.BOLD, 15);
+    private static final String FAMILIA_SERIF = "Georgia";
+    private static final String FAMILIA_MONO = "Consolas";
+
+    /** Fonte padrão do texto (sem serifa, 16 pt). */
+    public static final Font FONTE = new Font(FAMILIA, Font.PLAIN, 16);
+    /** Fonte dos botões e das abas (negrito). */
+    public static final Font FONTE_BOTAO = new Font(FAMILIA, Font.BOLD, 16);
+    /** Fonte das legendas de campos (negrito, um pouco menor). */
+    public static final Font FONTE_ROTULO = new Font(FAMILIA, Font.BOLD, 15);
+    /** Fonte serifada dos títulos de página. */
+    public static final Font FONTE_TITULO = new Font(FAMILIA_SERIF, Font.BOLD, 30);
+    /** Fonte serifada de apoio (frases de destaque). */
+    public static final Font FONTE_SERIF = new Font(FAMILIA_SERIF, Font.PLAIN, 26);
+    /** Fonte monoespaçada dos pequenos rótulos em maiúsculas. */
+    public static final Font FONTE_MONO = new Font(FAMILIA_MONO, Font.BOLD, 12);
 
     private TemaAstra() { }
 
@@ -69,33 +87,47 @@ public final class TemaAstra {
         // Valores oficiais de customização do FlatLaf, aplicados ANTES de abrir as telas.
         UIManager.put("defaultFont", FONTE);
         UIManager.put("Panel.background", FUNDO);
+        UIManager.put("Panel.foreground", TEXTO);
         UIManager.put("Viewport.background", CARTAO);
         UIManager.put("Label.foreground", TEXTO);
         UIManager.put("Label.font", FONTE);
+
         UIManager.put("Button.font", FONTE_BOTAO);
-        UIManager.put("Button.arc", 18);
+        UIManager.put("Button.background", ROXO);
+        UIManager.put("Button.foreground", Color.WHITE);
+        UIManager.put("Button.arc", 14);
+        UIManager.put("Button.disabledText", new Color(124, 114, 150)); // legível, mas claramente inativo
         UIManager.put("Button.minimumHeight", 46);
         UIManager.put("Button.margin", new Insets(12, 19, 12, 19));
-        UIManager.put("Component.arc", 14);
+
+        UIManager.put("Component.arc", 12);
         UIManager.put("Component.focusWidth", 2);
         UIManager.put("Component.focusColor", FOCO);
-        UIManager.put("TextComponent.arc", 14);
+        UIManager.put("TextComponent.arc", 12);
+
         UIManager.put("TextField.font", FONTE);
         UIManager.put("TextField.background", CAMPO);
-        UIManager.put("TextField.foreground", TEXTO_ESCURO);
+        UIManager.put("TextField.foreground", TEXTO);
+        UIManager.put("TextField.caretForeground", TEXTO);
+        UIManager.put("TextField.selectionBackground", ROXO_ESCURO);
+        UIManager.put("TextField.selectionForeground", Color.WHITE);
         UIManager.put("PasswordField.font", FONTE);
         UIManager.put("PasswordField.background", CAMPO);
-        UIManager.put("PasswordField.foreground", TEXTO_ESCURO);
+        UIManager.put("PasswordField.foreground", TEXTO);
+        UIManager.put("PasswordField.caretForeground", TEXTO);
         UIManager.put("ComboBox.font", FONTE);
         UIManager.put("ComboBox.background", CAMPO);
-        UIManager.put("ComboBox.foreground", TEXTO_ESCURO);
+        UIManager.put("ComboBox.foreground", TEXTO);
+        UIManager.put("ComboBox.selectionBackground", ROXO_ESCURO);
+        UIManager.put("ComboBox.selectionForeground", Color.WHITE);
         UIManager.put("Spinner.font", FONTE);
         UIManager.put("Spinner.background", CAMPO);
-        UIManager.put("Spinner.foreground", TEXTO_ESCURO);
+        UIManager.put("Spinner.foreground", TEXTO);
         UIManager.put("CheckBox.font", FONTE);
         UIManager.put("CheckBox.background", CARTAO);
         UIManager.put("CheckBox.foreground", TEXTO);
         UIManager.put("CheckBox.icon.focusWidth", 2);
+
         UIManager.put("TabbedPane.font", FONTE_BOTAO);
         UIManager.put("TabbedPane.background", FUNDO);
         UIManager.put("TabbedPane.foreground", SUAVE);
@@ -103,24 +135,38 @@ public final class TemaAstra {
         UIManager.put("TabbedPane.selected", CARTAO_ALT); // compatibilidade sem FlatLaf
         UIManager.put("TabbedPane.selectedForeground", TEXTO);
         UIManager.put("TabbedPane.unselectedBackground", FUNDO);
-        UIManager.put("TabbedPane.unselectedForeground", TEXTO);
-        UIManager.put("TabbedPane.underlineColor", ROXO);
-        UIManager.put("TabbedPane.tabHeight", 52);
+        UIManager.put("TabbedPane.unselectedForeground", SUAVE);
+        UIManager.put("TabbedPane.underlineColor", ROXO_LUZ);
+        UIManager.put("TabbedPane.tabHeight", 50);
         UIManager.put("TabbedPane.showTabSeparators", false);
         UIManager.put("TabbedPane.contentAreaColor", FUNDO);
+
         UIManager.put("Table.font", FONTE);
         UIManager.put("TableHeader.font", FONTE_BOTAO);
         UIManager.put("Table.rowHeight", 46);
+        UIManager.put("Table.background", CARTAO);
+        UIManager.put("Table.foreground", TEXTO);
         UIManager.put("Table.selectionBackground", ROXO_ESCURO);
         UIManager.put("Table.selectionForeground", Color.WHITE);
+        UIManager.put("Table.gridColor", BORDA_ESCURO);
+
+        UIManager.put("OptionPane.background", CARTAO);
+        UIManager.put("OptionPane.messageForeground", TEXTO);
         UIManager.put("OptionPane.messageFont", FONTE);
         UIManager.put("OptionPane.buttonFont", FONTE_BOTAO);
+        UIManager.put("OptionPane.buttonBackground", CARTAO_ALT);
+        UIManager.put("OptionPane.buttonForeground", TEXTO);
         UIManager.put("ScrollBar.width", 12);
+        UIManager.put("ScrollBar.thumb", BORDA);
+        UIManager.put("ScrollBar.track", CARTAO);
         UIManager.put("ScrollPane.smoothScrolling", true);
+        UIManager.put("ToolTip.background", CARTAO_ALT);
+        UIManager.put("ToolTip.foreground", TEXTO);
+        UIManager.put("ToolTip.font", FONTE);
     }
 
     /**
-     * Cria um cartão com fundo de alto contraste e borda discreta.
+     * Cria um cartão escuro com borda discreta e espaçamento consistente.
      *
      * @return o painel pronto para receber componentes
      */
@@ -130,18 +176,19 @@ public final class TemaAstra {
         p.setBorder(new CompoundBorder(
                 new LineBorder(BORDA_ESCURO, 1, true),
                 new EmptyBorder(25, 30, 25, 30)));
+        p.putClientProperty("FlatLaf.style", "arc: 18;");
         return p;
     }
 
     /**
-     * Cria um título grande (30 pt, negrito).
+     * Cria um título grande, serifado e em negrito.
      *
      * @param texto o texto do título
      * @return o rótulo formatado
      */
     public static JLabel titulo(String texto) {
         JLabel l = new JLabel(texto);
-        l.setFont(new Font(FAMILIA, Font.BOLD, 30));
+        l.setFont(FONTE_TITULO);
         l.setForeground(TEXTO);
         return l;
     }
@@ -169,6 +216,20 @@ public final class TemaAstra {
         JLabel l = new JLabel(texto);
         l.setFont(FONTE_ROTULO);
         l.setForeground(TEXTO);
+        return l;
+    }
+
+    /**
+     * Cria um pequeno rótulo em maiúsculas, monoespaçado e dourado (como "ASTRA / FILMES"),
+     * usado para dar hierarquia visual acima de títulos e seções.
+     *
+     * @param texto o texto do rótulo (é convertido para maiúsculas)
+     * @return o rótulo formatado
+     */
+    public static JLabel etiqueta(String texto) {
+        JLabel l = new JLabel(texto.toUpperCase(Locale.ROOT));
+        l.setFont(FONTE_MONO);
+        l.setForeground(DOURADO);
         return l;
     }
 
@@ -212,20 +273,20 @@ public final class TemaAstra {
                     g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
                     boolean ativo = isEnabled();
                     Color fundo = !ativo ? CARTAO
-                            : getModel().isPressed() ? new Color(37, 26, 54)
-                            : getModel().isRollover() ? new Color(69, 52, 94) : CARTAO_ALT;
+                            : getModel().isPressed() ? new Color(32, 23, 45)
+                            : getModel().isRollover() ? new Color(48, 36, 64) : CARTAO_ALT;
                     g.setColor(fundo);
-                    g.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
-                    g.setColor(BORDA_ESCURO);
+                    g.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                    g.setColor(ativo ? BORDA : BORDA_ESCURO);
                     g.setStroke(new BasicStroke(1f));
-                    g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 18, 18);
+                    g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
                     if (isFocusOwner()) {
                         g.setColor(FOCO);
                         g.setStroke(new BasicStroke(2f));
-                        g.drawRoundRect(3, 3, getWidth() - 7, getHeight() - 7, 14, 14);
+                        g.drawRoundRect(3, 3, getWidth() - 7, getHeight() - 7, 12, 12);
                     }
                     g.setFont(getFont());
-                    g.setColor(ativo ? TEXTO : BORDA_ESCURO);
+                    g.setColor(ativo ? TEXTO : DIM);
                     FontMetrics medidas = g.getFontMetrics();
                     int x = (getWidth() - medidas.stringWidth(getText())) / 2;
                     int y = (getHeight() - medidas.getHeight()) / 2 + medidas.getAscent();
@@ -268,13 +329,19 @@ public final class TemaAstra {
             // Fallback de desenvolvimento: não deixar o botão transparente no Metal.
             b.setUI(new javax.swing.plaf.basic.BasicButtonUI());
             b.setOpaque(true);
-            b.setBorder(new EmptyBorder(10, 14, 10, 14));
+            b.setBorder(new CompoundBorder(
+                    new LineBorder(principal ? ROXO : BORDA, 1, true),
+                    new EmptyBorder(10, 14, 10, 14)));
         }
         b.setPreferredSize(new Dimension(Math.max(165, b.getPreferredSize().width + 24), 48));
         b.putClientProperty("JButton.buttonType", "roundRect");
         b.putClientProperty("JComponent.minimumHeight", 46);
-        b.putClientProperty("FlatLaf.style", "arc: 18; borderWidth: 0; focusWidth: 2;"
-                + (principal ? " hoverBackground: #9B5CFC; pressedBackground: #6320B0;" : " hoverBackground: #45345E; pressedBackground: #251A36;"));
+        b.putClientProperty("FlatLaf.style",
+                "arc: 14; focusWidth: 2; borderWidth: " + (principal ? "0" : "1")
+                        + "; borderColor: #3A304E;"
+                        + (principal
+                        ? " hoverBackground: #B06CFF; pressedBackground: #6320B0;"
+                        : " hoverBackground: #302440; pressedBackground: #20172D;"));
         return b;
     }
 
@@ -282,6 +349,7 @@ public final class TemaAstra {
      * Cria o botão de uma poltrona, com desenho próprio para manter o número legível.
      * O FlatLaf continua responsável pelos outros componentes, mas não pode
      * abreviar "01" como "..." quando a largura da grade é recalculada.
+     * O número é escuro sobre cores claras (poltrona livre) e branco sobre as demais, para manter o contraste.
      *
      * @param numero o número exibido no botão, por exemplo "03"
      * @param cor    cor de fundo (livre, ocupada ou selecionada)
@@ -297,23 +365,28 @@ public final class TemaAstra {
                     g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
                     int largura = getWidth() - 1;
                     int altura = getHeight() - 1;
-                    int arco = Math.min(altura, 40);
+                    int arco = Math.min(altura, 34);
                     Color fundo = getModel().isPressed() ? cor.darker()
                             : getModel().isRollover() ? cor.brighter() : cor;
+
+                    g.setColor(new Color(0, 0, 0, 45));
+                    g.fillRoundRect(3, 4, Math.max(1, largura - 4), Math.max(1, altura - 4), arco, arco);
                     g.setColor(fundo);
-                    g.fillRoundRect(1, 1, Math.max(1, largura - 2), Math.max(1, altura - 2), arco, arco);
-                    if (ROXO.equals(cor)) {
-                        g.setColor(Color.WHITE);
-                        g.setStroke(new BasicStroke(2.5f));
-                        g.drawRoundRect(2, 2, Math.max(1, largura - 4), Math.max(1, altura - 4), arco, arco);
-                    }
+                    g.fillRoundRect(1, 1, Math.max(1, largura - 3), Math.max(1, altura - 3), arco, arco);
+
+                    boolean selecionada = ROXO.equals(cor);
+                    g.setColor(selecionada ? FOCO : new Color(255, 255, 255, 45));
+                    g.setStroke(new BasicStroke(selecionada ? 2.2f : 1f));
+                    g.drawRoundRect(1, 1, Math.max(1, largura - 3), Math.max(1, altura - 3), arco, arco);
+
                     if (isFocusOwner()) {
                         g.setColor(FOCO);
                         g.setStroke(new BasicStroke(2));
-                        g.drawRoundRect(4, 4, Math.max(1, largura - 8), Math.max(1, altura - 8), arco - 4, arco - 4);
+                        g.drawRoundRect(4, 4, Math.max(1, largura - 9), Math.max(1, altura - 9), arco - 4, arco - 4);
                     }
+
                     g.setFont(getFont());
-                    g.setColor(Color.WHITE);
+                    g.setColor(luminancia(cor) > 0.35 ? FUNDO : Color.WHITE);
                     FontMetrics medidas = g.getFontMetrics();
                     String texto = getText();
                     int x = (getWidth() - medidas.stringWidth(texto)) / 2;
@@ -324,7 +397,7 @@ public final class TemaAstra {
                 }
             }
         };
-        botao.setFont(new Font(FAMILIA, Font.BOLD, 17));
+        botao.setFont(new Font(FAMILIA_MONO, Font.BOLD, 16));
         botao.setForeground(Color.WHITE);
         botao.setContentAreaFilled(false);
         botao.setBorderPainted(false);
@@ -337,6 +410,15 @@ public final class TemaAstra {
         botao.setToolTipText("Poltrona " + numero);
         botao.getAccessibleContext().setAccessibleName("Poltrona " + numero);
         return botao;
+    }
+
+    /** Luminância relativa (0 a 1) de uma cor, para escolher entre texto claro e escuro. */
+    private static double luminancia(Color cor) {
+        double[] canais = {cor.getRed() / 255.0, cor.getGreen() / 255.0, cor.getBlue() / 255.0};
+        for (int i = 0; i < canais.length; i++) {
+            canais[i] = canais[i] <= 0.03928 ? canais[i] / 12.92 : Math.pow((canais[i] + 0.055) / 1.055, 2.4);
+        }
+        return 0.2126 * canais[0] + 0.7152 * canais[1] + 0.0722 * canais[2];
     }
 
     /**
@@ -364,14 +446,14 @@ public final class TemaAstra {
     }
 
     /**
-     * Aplica a um campo de entrada a aparência padrão: letra de 16 px, fundo claro e texto escuro.
+     * Aplica a um campo de entrada a aparência padrão: letra de 16 px, fundo escuro e texto claro.
      *
      * @param componente campo de texto, lista suspensa ou seletor numérico
      */
     public static void prepararEntrada(JComponent componente) {
         componente.setFont(FONTE);
         componente.setBackground(CAMPO);
-        componente.setForeground(TEXTO_ESCURO);
+        componente.setForeground(TEXTO);
         componente.putClientProperty("JComponent.roundRect", true);
         // A altura sai da medida real da letra e das bordas do componente. Uma altura fixa de 44 px cortava a
         // parte de baixo das letras (o "g" de "gmail") em telas com escala de 125% ou 150%, onde a letra e as
@@ -379,7 +461,7 @@ public final class TemaAstra {
         FontMetrics medidas = componente.getFontMetrics(FONTE);
         int alturaNecessaria = medidas.getHeight() + 24; // listas e seletores: letra + folga do contorno e da seta
         if (componente instanceof JTextField campo) {
-            campo.setCaretColor(TEXTO_ESCURO);
+            campo.setCaretColor(TEXTO);
             campo.setSelectionColor(ROXO_ESCURO);
             campo.setSelectedTextColor(Color.WHITE);
             campo.setMargin(new Insets(4, 12, 4, 12));
@@ -398,7 +480,7 @@ public final class TemaAstra {
                     label.setFont(FONTE);
                     label.setBorder(new EmptyBorder(9, 12, 9, 12));
                     label.setBackground(selecionado ? ROXO_ESCURO : CAMPO);
-                    label.setForeground(selecionado ? Color.WHITE : TEXTO_ESCURO);
+                    label.setForeground(selecionado ? Color.WHITE : TEXTO);
                     return label;
                 });
             }
@@ -408,8 +490,10 @@ public final class TemaAstra {
             JTextField tf = editor.getTextField();
             tf.setFont(FONTE);
             tf.setBackground(CAMPO);
-            tf.setForeground(TEXTO_ESCURO);
-            tf.setCaretColor(TEXTO_ESCURO);
+            tf.setForeground(TEXTO);
+            tf.setCaretColor(TEXTO);
+            tf.setSelectionColor(ROXO_ESCURO);
+            tf.setSelectedTextColor(Color.WHITE);
         }
         Dimension d = componente.getPreferredSize();
         componente.setPreferredSize(new Dimension(Math.max(160, d.width), altura));
@@ -444,7 +528,9 @@ public final class TemaAstra {
         if (!texto.isEmpty()) {
             g.gridy = indice * 2;
             g.insets = new Insets(0, 0, 8, 0);
-            p.add(destaque(texto), g);
+            JLabel rotulo = destaque(texto);
+            rotulo.setForeground(SUAVE);
+            p.add(rotulo, g);
         }
         if (campo instanceof JTextField || campo instanceof JComboBox<?> || campo instanceof JSpinner) {
             prepararEntrada(campo);
@@ -483,14 +569,14 @@ public final class TemaAstra {
     }
 
     /**
-     * Mostra uma mensagem de erro com o título padrão "Astra | Atenção".
+     * Mostra uma mensagem de erro com o título padrão "ASTRA / ATENÇÃO".
      * Para escolher o título, use {@link #erro(Component, String, String)}.
      *
      * @param pai      componente sobre o qual a janela de aviso aparece
      * @param mensagem o que aconteceu
      */
     public static void erro(Component pai, String mensagem) {
-        JOptionPane.showMessageDialog(pai, mensagem, "Astra | Atenção", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(pai, mensagem, "ASTRA  /  ATENÇÃO", JOptionPane.ERROR_MESSAGE);
     }
 
     /**
@@ -501,7 +587,8 @@ public final class TemaAstra {
      * @param mensagem o que aconteceu e o que fazer
      */
     public static void aviso(Component pai, String titulo, String mensagem) {
-        JOptionPane.showMessageDialog(pai, mensagem, "Astra | " + titulo, JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(pai, mensagem, "ASTRA  /  " + titulo.toUpperCase(Locale.ROOT),
+                JOptionPane.WARNING_MESSAGE);
     }
 
     /**
@@ -512,17 +599,18 @@ public final class TemaAstra {
      * @param mensagem o que aconteceu
      */
     public static void erro(Component pai, String titulo, String mensagem) {
-        JOptionPane.showMessageDialog(pai, mensagem, "Astra | " + titulo, JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(pai, mensagem, "ASTRA  /  " + titulo.toUpperCase(Locale.ROOT),
+                JOptionPane.ERROR_MESSAGE);
     }
 
     /**
-     * Mostra uma mensagem de confirmação com o título "Astra | Tudo certo".
+     * Mostra uma mensagem de confirmação com o título "ASTRA / TUDO CERTO".
      *
      * @param pai      componente sobre o qual a janela aparece
      * @param mensagem o que deu certo
      */
     public static void sucesso(Component pai, String mensagem) {
-        JOptionPane.showMessageDialog(pai, mensagem, "Astra | Tudo certo", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(pai, mensagem, "ASTRA  /  TUDO CERTO", JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
@@ -548,35 +636,39 @@ public final class TemaAstra {
     }
 
     /**
-     * Cria a barra superior reutilizada nas áreas de cliente e administração.
+     * Cria a barra superior reutilizada nas áreas de cliente e administração: marca "A S T R A",
+     * nome da área em dourado e identificação de quem está logado.
      *
      * @param area          nome da área (por exemplo "Área do cliente")
      * @param identificacao nome de quem está logado
      * @return a barra superior
      */
     public static JPanel cabecalho(String area, String identificacao) {
-        JPanel topo = new JPanel(new BorderLayout());
+        JPanel topo = new JPanel(new BorderLayout(18, 0));
         topo.setBackground(CARTAO);
-        topo.setBorder(new CompoundBorder(new MatteBorder(0, 0, 1, 0, BORDA_ESCURO), new EmptyBorder(15, 28, 15, 28)));
+        topo.setBorder(new CompoundBorder(new MatteBorder(0, 0, 1, 0, BORDA_ESCURO), new EmptyBorder(13, 28, 13, 28)));
         JPanel marca = new JPanel(new FlowLayout(FlowLayout.LEFT, 13, 0));
         marca.setOpaque(false);
         JLabel simbolo = new JLabel("A", SwingConstants.CENTER);
         simbolo.setOpaque(true);
         simbolo.setBackground(ROXO);
         simbolo.setForeground(Color.WHITE);
-        simbolo.setFont(new Font(FAMILIA, Font.BOLD, 26));
-        simbolo.setPreferredSize(new Dimension(48, 48));
+        simbolo.setFont(new Font(FAMILIA_SERIF, Font.BOLD, 25));
+        simbolo.setPreferredSize(new Dimension(46, 46));
+        simbolo.setBorder(new LineBorder(ROXO_LUZ, 1, true));
+        simbolo.putClientProperty("FlatLaf.style", "arc: 14;");
         marca.add(simbolo);
         JPanel coluna = new JPanel(); coluna.setOpaque(false);
         coluna.setLayout(new BoxLayout(coluna, BoxLayout.Y_AXIS));
-        JLabel nome = destaque("ASTRA  CINEMA");
-        JLabel categoria = rotulo(area.toUpperCase(Locale.ROOT));
-        categoria.setFont(new Font(FAMILIA, Font.BOLD, 12));
-        coluna.add(nome); coluna.add(Box.createVerticalStrut(4)); coluna.add(categoria);
+        JLabel nome = new JLabel("A S T R A");
+        nome.setFont(new Font(FAMILIA_SERIF, Font.BOLD, 19));
+        nome.setForeground(TEXTO);
+        coluna.add(nome); coluna.add(Box.createVerticalStrut(3)); coluna.add(etiqueta(area));
         marca.add(coluna);
         topo.add(marca, BorderLayout.WEST);
         JLabel usuario = rotulo(identificacao);
-        usuario.setFont(new Font(FAMILIA, Font.BOLD, 15));
+        usuario.setFont(new Font(FAMILIA, Font.BOLD, 14));
+        usuario.setBorder(new EmptyBorder(0, 12, 0, 0));
         topo.add(usuario, BorderLayout.EAST);
         return topo;
     }
@@ -595,14 +687,17 @@ public final class TemaAstra {
         root.add(cabecalho(area, identificacao), BorderLayout.NORTH);
         abas.setFont(FONTE_BOTAO);
         abas.setBackground(FUNDO);
+        abas.setForeground(SUAVE);
         abas.putClientProperty("JTabbedPane.tabType", "underlined");
         abas.putClientProperty("JTabbedPane.tabAreaAlignment", "leading");
+        abas.putClientProperty("JTabbedPane.showContentSeparator", true);
+        abas.putClientProperty("JTabbedPane.contentSeparatorColor", BORDA_ESCURO);
         root.add(abas, BorderLayout.CENTER);
         return root;
     }
 
     /**
-     * Monta uma página: trilha ("CINEMA ASTRA / TÍTULO"), título e o conteúdo logo abaixo.
+     * Monta uma página: trilha dourada ("ASTRA / TÍTULO"), título serifado, filete violeta e o conteúdo abaixo.
      *
      * @param titulo   título da página
      * @param conteudo o que aparece abaixo do título
@@ -612,11 +707,22 @@ public final class TemaAstra {
         JPanel p = new JPanel(new BorderLayout(0, 18));
         p.setBackground(FUNDO);
         p.setBorder(new EmptyBorder(20, 27, 24, 27));
-        JPanel cab = new JPanel(new BorderLayout(0, 7)); cab.setOpaque(false);
-        JLabel categoria = rotulo("CINEMA ASTRA  /  " + titulo.toUpperCase(Locale.ROOT));
-        categoria.setFont(new Font(FAMILIA, Font.BOLD, 12));
-        cab.add(categoria, BorderLayout.NORTH);
-        cab.add(titulo(titulo), BorderLayout.CENTER);
+        JPanel cab = new JPanel();
+        cab.setOpaque(false);
+        cab.setLayout(new BoxLayout(cab, BoxLayout.Y_AXIS));
+        JLabel categoria = etiqueta("ASTRA  /  " + titulo);
+        categoria.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel nome = titulo(titulo);
+        nome.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JPanel filete = new JPanel();
+        filete.setOpaque(true);
+        filete.setBackground(ROXO_LUZ);
+        filete.setPreferredSize(new Dimension(54, 2));
+        filete.setMaximumSize(new Dimension(54, 2));
+        filete.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cab.add(categoria); cab.add(Box.createVerticalStrut(5));
+        cab.add(nome); cab.add(Box.createVerticalStrut(8));
+        cab.add(filete);
         p.add(cab, BorderLayout.NORTH);
         p.add(conteudo, BorderLayout.CENTER);
         return p;
@@ -648,18 +754,18 @@ public final class TemaAstra {
     }
 
     /**
-     * Aplica à tabela linhas claras e alternadas, para não misturar textos com o fundo escuro.
+     * Aplica à tabela o tema escuro: linhas alternadas, cabeçalho dourado com filete violeta.
      *
      * @param tabela a tabela a formatar
      */
     public static void configurarTabela(JTable tabela) {
         tabela.setFont(FONTE);
         tabela.setRowHeight(46);
-        tabela.setBackground(CAMPO);
-        tabela.setForeground(TEXTO_ESCURO);
+        tabela.setBackground(CARTAO);
+        tabela.setForeground(TEXTO);
         tabela.setSelectionBackground(ROXO_ESCURO);
         tabela.setSelectionForeground(Color.WHITE);
-        tabela.setGridColor(new Color(230, 224, 238));
+        tabela.setGridColor(BORDA_ESCURO);
         tabela.setShowHorizontalLines(true);
         tabela.setShowVerticalLines(false);
         tabela.setFillsViewportHeight(true);
@@ -668,9 +774,10 @@ public final class TemaAstra {
         DefaultTableCellRenderer cell = new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean selected, boolean focus, int row, int col) {
                 super.getTableCellRendererComponent(table, value, selected, focus, row, col);
-                setBorder(new EmptyBorder(0, 13, 0, 10));
-                setBackground(selected ? ROXO_ESCURO : (row % 2 == 0 ? CAMPO : new Color(241, 237, 249)));
-                setForeground(selected ? Color.WHITE : TEXTO_ESCURO);
+                setOpaque(true);
+                setBorder(new CompoundBorder(new MatteBorder(0, 0, 1, 0, BORDA_ESCURO), new EmptyBorder(0, 13, 0, 10)));
+                setBackground(selected ? ROXO_ESCURO : (row % 2 == 0 ? CARTAO : new Color(22, 16, 35)));
+                setForeground(selected ? Color.WHITE : TEXTO);
                 return this;
             }
         };
@@ -679,9 +786,10 @@ public final class TemaAstra {
         if (h != null) {
             h.setFont(FONTE_BOTAO);
             h.setBackground(CARTAO_ALT);
-            h.setForeground(TEXTO);
+            h.setForeground(DOURADO);
             h.setPreferredSize(new Dimension(0, 48));
             h.setReorderingAllowed(false);
+            h.setBorder(new MatteBorder(0, 0, 2, 0, ROXO));
         }
     }
 }

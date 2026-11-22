@@ -70,31 +70,50 @@ public class AstraFrame extends JFrame {
         mensagem.setOpaque(false);
         mensagem.setLayout(new BoxLayout(mensagem, BoxLayout.Y_AXIS));
         mensagem.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 40));
-        JLabel etiqueta = TemaAstra.destaque("SEU INGRESSO PARA UMA BOA HISTÓRIA");
-        etiqueta.setForeground(TemaAstra.SUAVE);
-        etiqueta.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        JLabel nome = new JLabel("Cinema ASTRA");
-        nome.setFont(new Font("Segoe UI", Font.BOLD, 48));
+        JLabel etiqueta = TemaAstra.etiqueta("Uma experiência cinematográfica");
+        JLabel nome = new JLabel("A S T R A");
+        nome.setFont(TemaAstra.FONTE_TITULO.deriveFont(66f));
         nome.setForeground(TemaAstra.TEXTO);
         JLabel frase = new JLabel("O cinema começa aqui.");
-        frase.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        frase.setForeground(new Color(194, 151, 255));
+        frase.setFont(TemaAstra.FONTE_TITULO.deriveFont(Font.ITALIC, 28f));
+        frase.setForeground(TemaAstra.ROXO_LUZ);
         JLabel detalhe = new JLabel("<html>Explore as sessões, escolha sua poltrona<br>e aproveite sua experiência no cinema.</html>");
-        detalhe.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        detalhe.setFont(TemaAstra.FONTE.deriveFont(17f));
         detalhe.setForeground(TemaAstra.SUAVE);
+
+        JPanel linha = new JPanel();
+        linha.setOpaque(true);
+        linha.setBackground(TemaAstra.ROXO_LUZ);
+        linha.setPreferredSize(new Dimension(230, 2));
+        linha.setMaximumSize(new Dimension(230, 2));
+        linha.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel servicos = TemaAstra.rotulo("SESSÕES   •   INGRESSOS   •   BOMBONIERE");
+        servicos.setFont(TemaAstra.FONTE_MONO);
+        servicos.setForeground(TemaAstra.DIM);
+
         mensagem.add(Box.createVerticalGlue());
-        mensagem.add(etiqueta); mensagem.add(Box.createVerticalStrut(20));
-        mensagem.add(nome); mensagem.add(Box.createVerticalStrut(13));
-        mensagem.add(frase); mensagem.add(Box.createVerticalStrut(23));
+        mensagem.add(etiqueta); mensagem.add(Box.createVerticalStrut(24));
+        mensagem.add(nome); mensagem.add(Box.createVerticalStrut(10));
+        mensagem.add(frase); mensagem.add(Box.createVerticalStrut(24));
+        mensagem.add(linha); mensagem.add(Box.createVerticalStrut(24));
         mensagem.add(detalhe); mensagem.add(Box.createVerticalStrut(34));
-        mensagem.add(TemaAstra.rotulo("SESSÕES   •   INGRESSOS   •   BOMBONIERE"));
+        mensagem.add(servicos);
         mensagem.add(Box.createVerticalGlue());
 
         JPanel acesso = TemaAstra.painel();
         acesso.setLayout(new BoxLayout(acesso, BoxLayout.Y_AXIS));
+        acesso.setBorder(new javax.swing.border.CompoundBorder(
+                new javax.swing.border.MatteBorder(2, 0, 0, 0, TemaAstra.ROXO_LUZ),
+                new javax.swing.border.CompoundBorder(
+                        new javax.swing.border.LineBorder(TemaAstra.BORDA_ESCURO, 1, true),
+                        new javax.swing.border.EmptyBorder(27, 30, 27, 30))));
+        JLabel etiquetaAcesso = TemaAstra.etiqueta("Selecione seu perfil");
         JLabel chamada = TemaAstra.titulo("Como deseja entrar?");
+        chamada.setFont(TemaAstra.FONTE_TITULO.deriveFont(27f));
         JLabel subtitulo = TemaAstra.rotulo("Escolha o perfil para continuar.");
         chamada.setAlignmentX(Component.LEFT_ALIGNMENT);
+        etiquetaAcesso.setAlignmentX(Component.LEFT_ALIGNMENT);
         subtitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
         JButton cliente = TemaAstra.botao("Continuar como cliente");
         JButton admin = TemaAstra.botaoSecundario("Administrador");
@@ -102,17 +121,20 @@ public class AstraFrame extends JFrame {
         admin.setAlignmentX(Component.LEFT_ALIGNMENT);
         cliente.setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
         admin.setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
-        JLabel infoCliente = TemaAstra.rotulo("Consulte filmes, compre ingressos e acompanhe pedidos.");
-        JLabel infoAdmin = TemaAstra.rotulo("Gerencie sessões, produtos e pedidos.");
-        infoCliente.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        infoAdmin.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        JLabel infoCliente = TemaAstra.rotulo("<html>Consulte filmes, compre ingressos<br>e acompanhe seus pedidos.</html>");
+        JLabel infoAdmin = TemaAstra.rotulo("<html>Gerencie sessões, produtos<br>e pedidos do cinema.</html>");
+        infoCliente.setFont(TemaAstra.FONTE.deriveFont(13f));
+        infoAdmin.setFont(TemaAstra.FONTE.deriveFont(13f));
+        infoCliente.setForeground(TemaAstra.SUAVE);
+        infoAdmin.setForeground(TemaAstra.SUAVE);
         infoCliente.setAlignmentX(Component.LEFT_ALIGNMENT);
         infoAdmin.setAlignmentX(Component.LEFT_ALIGNMENT);
-        acesso.add(chamada); acesso.add(Box.createVerticalStrut(10));
-        acesso.add(subtitulo); acesso.add(Box.createVerticalStrut(34));
-        acesso.add(cliente); acesso.add(Box.createVerticalStrut(8));
-        acesso.add(infoCliente); acesso.add(Box.createVerticalStrut(27));
-        acesso.add(admin); acesso.add(Box.createVerticalStrut(8));
+        acesso.add(etiquetaAcesso); acesso.add(Box.createVerticalStrut(12));
+        acesso.add(chamada); acesso.add(Box.createVerticalStrut(8));
+        acesso.add(subtitulo); acesso.add(Box.createVerticalStrut(30));
+        acesso.add(cliente); acesso.add(Box.createVerticalStrut(9));
+        acesso.add(infoCliente); acesso.add(Box.createVerticalStrut(23));
+        acesso.add(admin); acesso.add(Box.createVerticalStrut(9));
         acesso.add(infoAdmin);
 
         GridBagConstraints esq = new GridBagConstraints();
@@ -131,7 +153,7 @@ public class AstraFrame extends JFrame {
         raiz.add(centro, BorderLayout.CENTER);
         JLabel rodape = TemaAstra.rotulo("ASTRA  /  UMA EXPERIÊNCIA PARA TODOS");
         rodape.setHorizontalAlignment(SwingConstants.CENTER);
-        rodape.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        rodape.setFont(TemaAstra.FONTE_MONO);
         raiz.add(rodape, BorderLayout.SOUTH);
         setContentPane(raiz);
         getRootPane().setDefaultButton(cliente);

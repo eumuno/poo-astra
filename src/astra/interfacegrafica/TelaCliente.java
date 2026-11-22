@@ -89,7 +89,7 @@ public class TelaCliente extends JFrame {
         this.catalogo = catalogo;
         this.pedido = catalogo.iniciarPedido(cliente);
         TemaAstra.configurarJanela(this, "Cliente · " + cliente.getNome(), 1150, 830);
-        abas.setFont(new Font("SansSerif", Font.BOLD, 16));
+        abas.setFont(TemaAstra.FONTE_BOTAO);
         abas.addTab("Ingressos", criarIngressos());
         abas.addTab("Bomboniere", criarBomboniere());
         abas.addTab("Carrinho", criarCarrinho());
@@ -130,8 +130,7 @@ public class TelaCliente extends JFrame {
         painelEscolha.setOpaque(false);
         painelEscolha.setPreferredSize(new Dimension(405, 400));
         painelEscolha.setMinimumSize(new Dimension(405, 300)); // sem isto o combo de sessões encolhe em janelas baixas e corta o horário
-        JLabel etapaSessao = TemaAstra.destaque("1   ESCOLHA SUA SESSÃO");
-        etapaSessao.setForeground(TemaAstra.SUAVE);
+        JLabel etapaSessao = TemaAstra.etiqueta("1   Escolha sua sessão");
         JPanel tituloEFormulario = new JPanel();
         tituloEFormulario.setOpaque(false);
         tituloEFormulario.setLayout(new BoxLayout(tituloEFormulario, BoxLayout.Y_AXIS));
@@ -144,7 +143,7 @@ public class TelaCliente extends JFrame {
 
         JPanel assentos = new JPanel(new BorderLayout(0, 16)); assentos.setOpaque(false);
         JPanel legenda = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 3)); legenda.setOpaque(false);
-        legenda.add(TemaAstra.destaque("2   POLTRONAS"));
+        legenda.add(TemaAstra.etiqueta("2   Poltronas"));
         legenda.add(itemLegenda("Disponível", TemaAstra.LIVRE));
         legenda.add(itemLegenda("Ocupado", TemaAstra.OCUPADO));
         legenda.add(itemLegenda("Selecionado", TemaAstra.ROXO));
@@ -155,6 +154,11 @@ public class TelaCliente extends JFrame {
         JLabel tela = TemaAstra.destaque("T E L A");
         tela.setHorizontalAlignment(SwingConstants.CENTER);
         tela.setOpaque(true); tela.setBackground(TemaAstra.CARTAO_ALT);
+        tela.setForeground(TemaAstra.DOURADO);
+        tela.setFont(TemaAstra.FONTE_MONO);
+        tela.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(2, 0, 0, 0, TemaAstra.ROXO_LUZ),
+                BorderFactory.createEmptyBorder(8, 0, 8, 0)));
         tela.setMaximumSize(new Dimension(440, 40));
         tela.setPreferredSize(new Dimension(440, 40));
         tela.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -260,19 +264,34 @@ public class TelaCliente extends JFrame {
             grade.add(TemaAstra.destaque("Nenhuma sessão selecionada"));
             grade.revalidate(); grade.repaint(); return;
         }
+        // Ingressos no carrinho ainda não foram vendidos no SQLite, mas não
+        // devem continuar verdes depois de adicionados ao pedido.
+        Set<Integer> noCarrinho = new HashSet<>();
+        for (Ingresso ingresso : pedido.getIngressos()) {
+            if (ingresso.getSessao().getId() == s.getId()) {
+                noCarrinho.add(ingresso.getAssento().getNumero());
+            }
+        }
+
         for (Assento a : s.getSala().getAssentos()) {
             int numero = a.getNumero();
-            boolean livre = !ocupadosNoBanco.contains(numero) && s.assentoEstaDisponivel(numero);
+            boolean noPedido = noCarrinho.contains(numero);
+            boolean livre = !noPedido && !ocupadosNoBanco.contains(numero)
+                    && s.assentoEstaDisponivel(numero);
             Color fundo = !livre ? TemaAstra.OCUPADO :
                     numero == numeroSelecionado ? TemaAstra.ROXO : TemaAstra.LIVRE;
             JButton botao = TemaAstra.botaoAssento(String.format("%02d", numero), fundo);
-            if (numero == numeroSelecionado) {
+            if (numero == numeroSelecionado && livre) {
                 botao.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3, true));
             }
-            botao.setToolTipText("Poltrona " + numero + (livre ? " disponível" : " ocupada"));
+            String situacao = noPedido ? " no carrinho" :
+                    (livre ? " disponível" : " ocupada");
+            botao.setToolTipText("Poltrona " + numero + situacao);
             botao.addActionListener(e -> {
                 if (!livre) {
-                    TemaAstra.erro(this, "A poltrona " + numero + " já está ocupada.");
+                    TemaAstra.erro(this, noPedido
+                            ? "A poltrona " + numero + " já está no seu carrinho."
+                            : "A poltrona " + numero + " já está ocupada.");
                     return;
                 }
                 numeroSelecionado = numero;
@@ -306,7 +325,7 @@ public class TelaCliente extends JFrame {
                 rotulo.setFont(comboProdutos.getFont());
                 rotulo.setOpaque(true);
                 rotulo.setBackground(selecionado ? TemaAstra.ROXO_ESCURO : TemaAstra.CAMPO);
-                rotulo.setForeground(selecionado ? Color.WHITE : TemaAstra.TEXTO_ESCURO);
+                rotulo.setForeground(selecionado ? Color.WHITE : TemaAstra.TEXTO);
                 rotulo.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
                 return rotulo;
             }
