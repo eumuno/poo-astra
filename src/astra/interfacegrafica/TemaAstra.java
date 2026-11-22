@@ -71,7 +71,7 @@ public final class TemaAstra {
     /**
      * Instala o FlatLaf escuro antes da construção dos componentes.
      * O projeto também compila pelo javac original; se o FlatLaf ainda não estiver
-     * no classpath, há um fallback para a interface básica até importar o Maven.
+     * no classpath (lib/flatlaf-3.5.4.jar), há um fallback para a interface básica.
      */
     public static void instalar() {
         try {
@@ -81,7 +81,7 @@ public final class TemaAstra {
         } catch (ReflectiveOperationException | LinkageError erro) {
             try { UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); }
             catch (Exception ignored) { }
-            System.err.println("FlatLaf não encontrado: importe o pom.xml no IntelliJ para ativar o tema Astra.");
+            System.err.println("FlatLaf não encontrado: adicione lib/flatlaf-3.5.4.jar ao classpath (veja o README) para ativar o tema Astra.");
         }
 
         // Valores oficiais de customização do FlatLaf, aplicados ANTES de abrir as telas.

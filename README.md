@@ -25,7 +25,7 @@ poo-astra/
 ├── README.md                   # Esta página inicial do projeto.
 ├── docs/                       # Pasta para documentos gerais.
 ├── diagramas/                  # Pasta para os diagramas UML.
-├── lib/                        # Bibliotecas externas (driver JDBC do SQLite).
+├── lib/                        # Bibliotecas externas (driver JDBC do SQLite e tema FlatLaf).
 └── src/                        # Pasta raiz do código-fonte.
     └── astra/                  
         ├── modelo/             # Classes de domínio.
@@ -41,25 +41,37 @@ Para testar o sistema Astra localmente, siga os passos abaixo:
 1. Faça o clone deste repositório em sua máquina.
 2. Tenha o **JDK 17 ou superior** instalado.
 3. Abra o projeto em sua IDE de preferência (IntelliJ IDEA, Eclipse ou NetBeans), marcando a pasta `src` como raiz do código-fonte.
-4. Adicione o driver do banco ao projeto: o arquivo `lib/sqlite-jdbc-3.46.1.3.jar` já está no repositório.
-   * **IntelliJ:** *File → Project Structure → Libraries → + → Java* e selecione o `.jar` da pasta `lib/` (ou clique com o botão direito no `.jar` → *Add as Library*).
-   * **Eclipse:** botão direito no projeto → *Build Path → Add External Archives* → selecione o `.jar`.
-   * **NetBeans:** *Libraries → Add JAR/Folder* → selecione o `.jar`.
+4. Adicione a pasta `lib/` como biblioteca do projeto. Ela já está no repositório e contém os dois `.jar` necessários:
+   * `sqlite-jdbc-3.46.1.3.jar`: driver do banco SQLite (sem ele o sistema não abre);
+   * `flatlaf-3.5.4.jar`: tema visual do Astra (sem ele a interface abre com o visual padrão do Java e o console mostra "FlatLaf não encontrado").
+
+   Como adicionar:
+   * **IntelliJ:** *File → Project Structure → Libraries → + → Java* e selecione a **pasta** `lib/` (assim os dois `.jar` entram de uma vez). Também dá para clicar com o botão direito na pasta `lib/` → *Add as Library*.
+   * **Eclipse:** botão direito no projeto → *Build Path → Add External Archives* → selecione os dois `.jar` da pasta `lib/`.
+   * **NetBeans:** *Libraries → Add JAR/Folder* → selecione os dois `.jar` da pasta `lib/`.
 5. Execute a classe `astra.Main` (arquivo `src/astra/Main.java`) com a **raiz do projeto como diretório de trabalho** (padrão do IntelliJ).
 6. Na primeira execução é criado o arquivo `astra.db` na raiz do projeto, com as tabelas e os dados iniciais. Nas próximas, os dados existentes são mantidos. Para recomeçar do zero, feche o programa e apague o `astra.db`.
 7. A tela inicial (`AstraFrame`) será aberta. Você pode navegar entre a Área do Administrador (para cadastrar Filmes, Produtos e Sessões) e a Área do Cliente (para simular uma compra completa de ingressos e produtos da bomboniere, finalizando no pagamento).
 
-**Pela linha de comando** (na raiz do projeto; no Windows troque `:` por `;` no classpath):
+**Pela linha de comando** (na raiz do projeto):
 
 ```bash
 javac -encoding UTF-8 -d out $(find src -name "*.java")
 ```
 
 ```bash
-java -cp "out:lib/sqlite-jdbc-3.46.1.3.jar" astra.Main
+java -cp "out:lib/*" astra.Main
 ```
 
-Se o driver não estiver no classpath, o sistema mostra a mensagem "Não foi possível conectar ao banco de dados" e não abre.
+No Windows, use `;` no lugar de `:` no classpath: `java -cp "out;lib/*" astra.Main`. As aspas são obrigatórias, para o `*` ser expandido pelo Java (incluindo todos os `.jar` da pasta `lib/`) e não pelo terminal.
+
+Se o driver não estiver no classpath, o sistema mostra a mensagem "Não foi possível conectar ao banco de dados" e não abre. Se faltar o FlatLaf, o sistema abre, mas sem o tema do Astra.
+
+**Alternativa com Maven** (precisa do Maven instalado; ele baixa as dependências do `pom.xml` sozinho, sem usar a pasta `lib/`):
+
+```bash
+mvn compile exec:java
+```
 
 ## Banco de Dados
 
@@ -109,11 +121,12 @@ Usuários iniciais (senha `123` para ambos): `admin@astra` (administrador) e `cl
 **Usar outro arquivo de banco** (por exemplo, para testes sem mexer no seu `astra.db`): adicione `-Dastra.banco.url=jdbc:sqlite:teste.db` às *VM options* da configuração de execução no IntelliJ, ou rode pela linha de comando:
 
 ```bash
-java -Dastra.banco.url=jdbc:sqlite:teste.db -cp "out:lib/sqlite-jdbc-3.46.1.3.jar" astra.Main
+java -Dastra.banco.url=jdbc:sqlite:teste.db -cp "out:lib/*" astra.Main
 ```
 
 **Problemas comuns:**
 * *"Não foi possível conectar ao banco de dados"*: o `lib/sqlite-jdbc-3.46.1.3.jar` não está no classpath (veja o passo 4 das instruções de execução).
+* *"FlatLaf não encontrado"* no console e telas com o visual padrão do Java: o `lib/flatlaf-3.5.4.jar` não está no classpath. Adicione a pasta `lib/` inteira como biblioteca (passo 4) ou use `-cp "out:lib/*"` na linha de comando.
 * *"Script sql/schema.sql não encontrado"*: o programa não foi executado a partir da raiz do projeto. Ajuste o *Working directory* da configuração de execução para a pasta `poo-astra`.
 * *Mudei o seed e nada aconteceu*: apague o `astra.db` (veja o aviso acima).
 
