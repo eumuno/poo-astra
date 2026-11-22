@@ -48,10 +48,14 @@ public class ConexaoBanco {
     /** URL JDBC usada quando nada é informado: o arquivo {@code astra.db} na pasta de execução. */
     public static final String URL_PADRAO = "jdbc:sqlite:astra.db";
 
+    /** Script que cria as tabelas (executado em toda inicialização). */
     private static final String SCRIPT_SCHEMA = "sql/schema.sql";
+    /** Script com os dados iniciais (executado só com o banco vazio). */
     private static final String SCRIPT_SEED = "sql/seed.sql";
+    /** Pasta onde os scripts são procurados quando não estão no classpath. */
     private static final String PASTA_SCRIPTS_FONTE = "src/astra/persistencia";
 
+    /** URL JDBC do banco usado por esta instância. */
     private final String url;
 
     /** Usa o arquivo padrão astra.db (ou o definido em -Dastra.banco.url). */
@@ -155,6 +159,13 @@ public class ConexaoBanco {
 
     // ------------------------------------------------------------------
 
+    /**
+     * Verifica se o banco ainda não tem dados, olhando a tabela {@code usuario}.
+     *
+     * @param conexao conexão já aberta
+     * @return {@code true} se não há nenhum usuário cadastrado
+     * @throws SQLException se a consulta falhar
+     */
     private boolean bancoVazio(Connection conexao) throws SQLException {
         try (Statement st = conexao.createStatement();
              ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM usuario")) {
@@ -162,6 +173,14 @@ public class ConexaoBanco {
         }
     }
 
+    /**
+     * Executa, um por um, todos os comandos de um arquivo .sql.
+     *
+     * @param conexao conexão já aberta (a transação é controlada por quem chama)
+     * @param recurso caminho do script, por exemplo {@code sql/schema.sql}
+     * @throws SQLException se algum comando falhar
+     * @throws PersistenciaException se o arquivo não for encontrado ou não puder ser lido
+     */
     private void executarScript(Connection conexao, String recurso)
             throws SQLException, PersistenciaException {
         try (Statement st = conexao.createStatement()) {
@@ -178,6 +197,10 @@ public class ConexaoBanco {
      * Procura primeiro no classpath (o IntelliJ copia os .sql junto com os
      * .class) e, se não achar, na pasta src/astra/persistencia/sql do
      * projeto (caso de quem compila com javac pela linha de comando).
+     *
+     * @param recurso caminho do script, por exemplo {@code sql/schema.sql}
+     * @return os comandos SQL do arquivo, sem comentários
+     * @throws PersistenciaException se o arquivo não for encontrado ou não puder ser lido
      */
     private List<String> lerComandos(String recurso) throws PersistenciaException {
         String texto;
