@@ -250,18 +250,36 @@ Os diagramas UML estão na pasta [`diagramas/`](diagramas/).
 
 Capturas de tela do sistema em funcionamento (pasta [`docs/prints/`](docs/prints/)):
 
-| Tela inicial | Área do Administrador |
+**Início e criação de conta**
+
+| Tela inicial | Criar conta |
 |---|---|
-| ![Tela inicial](docs/prints/01-tela-inicial.png) | ![Cadastro de filme](docs/prints/02-admin-cadastro.png) |
+| ![Tela inicial](docs/prints/01-tela-inicial.png) | ![Criar conta](docs/prints/02-cadastro-conta.png) |
 
-| Compra de ingresso | Pagamento |
+**Área do Cliente**
+
+| Escolha de ingresso e poltrona | Bomboniere |
 |---|---|
-| ![Compra de ingresso](docs/prints/03-cliente-ingresso.png) | ![Pagamento](docs/prints/04-cliente-pagamento.png) |
+| ![Compra de ingresso](docs/prints/03-cliente-ingresso.png) | ![Bomboniere](docs/prints/04-cliente-bomboniere.png) |
 
-| Erro tratado (assento ocupado) |
-|---|
-| ![Assento ocupado](docs/prints/05-erro-assento-ocupado.png) |
+| Carrinho | Pagamento |
+|---|---|
+| ![Carrinho](docs/prints/05-cliente-carrinho.png) | ![Pagamento](docs/prints/06-cliente-pagamento.png) |
 
-| Cadastro de sessão com data |
+| Minhas compras | Erro tratado (assento ocupado) |
+|---|---|
+| ![Minhas compras](docs/prints/07-cliente-minhas-compras.png) | ![Assento ocupado](docs/prints/08-erro-assento-ocupado.png) |
+
+**Área do Administrador**
+
+| Filmes | Janela de edição de filme |
+|---|---|
+| ![Filmes](docs/prints/09-admin-filmes.png) | ![Edição de filme](docs/prints/10-admin-edicao-filme.png) |
+
+| Produtos | Sessões |
+|---|---|
+| ![Produtos](docs/prints/11-admin-produtos.png) | ![Sessões](docs/prints/12-admin-sessoes.png) |
+
+| Pedidos |
 |---|
-| ![Cadastro de sessão](docs/prints/06-admin-sessao.png) |
+| ![Pedidos](docs/prints/13-admin-pedidos.png) |
