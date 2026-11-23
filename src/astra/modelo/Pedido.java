@@ -17,10 +17,15 @@ public class Pedido {
 
     /** Ciclo de vida do pedido. */
     public enum StatusPedido {
+        /** Pedido em montagem: aceita itens e ingressos. */
         ABERTO,
+        /** Pagamento confirmado. */
         PAGO,
+        /** Pedido separado e pronto para o cliente retirar. */
         PRONTO,
+        /** Cliente já retirou o pedido. */
         RETIRADO,
+        /** Pedido cancelado antes do pagamento. */
         CANCELADO
     }
 
@@ -265,32 +270,56 @@ public class Pedido {
     }
 
     // GETTERS
-    /** @return o identificador do pedido (0 se ainda não foi gravado no banco) */
+    /**
+     * Retorna o identificador do pedido.
+     *
+     * @return o identificador do pedido (0 se ainda não foi gravado no banco)
+     */
     public int getId() {
         return id;
     }
 
-    /** @return o cliente dono do pedido */
+    /**
+     * Retorna o cliente dono do pedido.
+     *
+     * @return o cliente dono do pedido
+     */
     public Cliente getCliente() {
         return cliente;
     }
 
-    /** @return a data e hora em que o pedido foi criado */
+    /**
+     * Retorna a data e a hora em que o pedido foi criado.
+     *
+     * @return a data e hora de criação do pedido
+     */
     public LocalDateTime getData() {
         return data;
     }
 
-    /** @return o status atual do pedido */
+    /**
+     * Retorna o status atual do pedido.
+     *
+     * @return o status atual do pedido
+     */
     public StatusPedido getStatus() {
         return status;
     }
 
-    /** @return a lista dos produtos do pedido, somente para leitura */
+    /**
+     * Retorna os produtos da bomboniere do pedido.
+     *
+     * @return a lista dos produtos do pedido, somente para leitura
+     */
     public List<ItemPedido> getItens() {
         return Collections.unmodifiableList(itens);
     }
 
-    /** @return a lista dos ingressos do pedido, somente para leitura */
+    /**
+     * Retorna os ingressos do pedido.
+     *
+     * @return a lista dos ingressos do pedido, somente para leitura
+     */
     public List<Ingresso> getIngressos() {
         return Collections.unmodifiableList(ingressos);
     }

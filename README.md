@@ -23,17 +23,19 @@ A organização física das pastas do repositório segue as recomendações de b
 ```
 poo-astra/
 ├── README.md                   # Esta página inicial do projeto.
-├── docs/                       # Pasta para documentos gerais.
+├── docs/                       # Enunciados, capturas de tela (prints/) e o documento de segurança (SEGURANCA-STRIDE.md).
 ├── diagramas/                  # Pasta para os diagramas UML.
 ├── lib/                        # Bibliotecas externas (driver JDBC do SQLite e tema FlatLaf).
+├── pom.xml                     # Configuração do Maven (dependências SQLite e FlatLaf).
 └── src/                        # Pasta raiz do código-fonte.
-    └── astra/                  
-        ├── modelo/             # Classes de domínio.
-        ├── servico/            # Regras de negócio e lógicas do sistema.
-        ├── excecoes/           # Classes de erros personalizados do domínio.
-        ├── persistencia/       # Acesso ao banco de dados (ConexaoBanco).
-        │   └── sql/            # schema.sql (tabelas) e seed.sql (dados iniciais).
-        └── interfacegrafica/   # Telas desenvolvidas em Java Swing.              
+    ├── astra/
+    │   ├── modelo/             # Classes de domínio.
+    │   ├── servico/            # Regras de negócio e lógicas do sistema.
+    │   ├── excecoes/           # Classes de erros personalizados do domínio.
+    │   ├── persistencia/       # Acesso ao banco de dados (ConexaoBanco).
+    │   │   └── sql/            # schema.sql (tabelas) e seed.sql (dados iniciais).
+    │   └── interfacegrafica/   # Telas desenvolvidas em Java Swing.
+    └── teste/                  # Testes automáticos (cada classe tem um main e imprime "TODOS OS ... TESTES PASSARAM").
 ```
 ## Instruções para Executar o Projeto
 
@@ -78,10 +80,10 @@ mvn compile exec:java
 Usamos **SQLite** via JDBC: o banco é um único arquivo (`astra.db`), sem precisar instalar servidor.
 
 * **`ConexaoBanco`** (`astra.persistencia`): ponto único de acesso ao banco. `abrirConexao()` devolve uma `Connection` com as chaves estrangeiras ligadas (`PRAGMA foreign_keys = ON`); `inicializar()` executa o `schema.sql` e, se o banco estiver vazio, o `seed.sql`, tudo em uma transação. A URL pode ser trocada com `-Dastra.banco.url=jdbc:sqlite:outro.db`.
-* **`schema.sql`**: cria as tabelas `usuario`, `filme`, `sala`, `assento`, `sessao`, `produto`, `pedido`, `item_pedido`, `ingresso` e `pagamento`. Os ids são gerados pelo banco (`AUTOINCREMENT`), os enums são gravados como texto (`name()`) com `CHECK` para aceitar só valores válidos, e as datas em ISO-8601 (`LocalDateTime.toString()`).
+* **`schema.sql`**: cria as 11 tabelas `usuario`, `filme`, `sala`, `assento`, `sessao`, `produto`, `pedido`, `item_pedido`, `ingresso`, `pagamento` e `auditoria` (registro das ações importantes, como logins, cadastros e compras). Os ids são gerados pelo banco (`AUTOINCREMENT`), os enums são gravados como texto (`name()`) com `CHECK` para aceitar só valores válidos, e as datas em ISO-8601 (`LocalDateTime.toString()`).
 * **`seed.sql`**: dados iniciais usados na demonstração (um filme, um produto, a sala com 10 assentos e uma sessão, além de um administrador e um cliente).
 * **`PersistenciaException`** (`astra.excecoes`): embrulha a `SQLException`, para que serviços e telas tratem erros de banco como as demais exceções do sistema.
-* **`CriptografiaSenha`** (`astra.persistencia`): as senhas são gravadas como hash SHA-256, nunca em texto puro.
+* **`CriptografiaSenha`** (`astra.persistencia`): as senhas são gravadas como hash PBKDF2 (HMAC-SHA256) com um sal aleatório por senha, nunca em texto puro.
 
 Regras garantidas pelo próprio banco:
 * `UNIQUE(sessao_id, assento_id)` em `ingresso`: o mesmo assento não pode ser vendido duas vezes na mesma sessão.
@@ -130,7 +132,7 @@ java -Dastra.banco.url=jdbc:sqlite:teste.db -cp "out:lib/*" astra.Main
 * *"Script sql/schema.sql não encontrado"*: o programa não foi executado a partir da raiz do projeto. Ajuste o *Working directory* da configuração de execução para a pasta `poo-astra`.
 * *Mudei o seed e nada aconteceu*: apague o `astra.db` (veja o aviso acima).
 
-> **Estado atual:** filmes, produtos, sessões, usuários e pedidos são gravados e lidos do banco. As telas usam os serviços (`FilmeService`, `ProdutoService`, `SessaoService` e `VendaService`), que dependem das interfaces de repositório e não do JDBC; o `Main` é o único lugar que cria as classes concretas.
+> **Estado atual:** filmes, produtos, sessões, usuários e pedidos são gravados e lidos do banco. As telas usam os serviços (`FilmeService`, `ProdutoService`, `SessaoService`, `VendaService`, `ContaService` e `PedidoService`), que dependem das interfaces de repositório e não do JDBC; o `Main` é o único lugar que cria as classes concretas. A `TelaCliente` conhece apenas a interface `CatalogoCliente`, e nenhuma tela importa classes de `persistencia`.
 
 ## Identificação das Classes Principais
 
@@ -140,14 +142,19 @@ O nosso domínio foi modelado para refletir a realidade de um cinema. As classes
 * **Cinema:** `Filme`, `Sessao`, `Sala` e `Assento`. Representam a estrutura física e a programação.
 * **Vendas:** `Produto`, `ItemPedido`, `Pedido` e `Ingresso`. Representam o ciclo de compras do cliente.
 * **Pagamento:** `Pagamento` (abstrata), `PagamentoPix` e `PagamentoCartao`. Representam as diferentes formas de processar o acerto financeiro do pedido.
-* **Serviços:** `FilmeService`, `ProdutoService`, `SessaoService` e `VendaService`. Validam as regras de negócio e usam os repositórios (interfaces) para ler e gravar no banco.
+* **Serviços:** `FilmeService`, `ProdutoService` e `SessaoService` (cadastros do administrador), `VendaService` (montar o pedido e pagar), `ContaService` (entrar no sistema e criar conta), `PedidoService` (acompanhar e atualizar pedidos) e `AtendimentoCliente`, que implementa a interface `CatalogoCliente` com tudo o que a área do cliente pode fazer. Validam as regras de negócio e usam os repositórios (interfaces) para ler e gravar no banco.
+* **Segurança e auditoria:** `ControleDeAcesso` (confere no banco se quem pede uma operação administrativa é mesmo administrador), `TrilhaDeAuditoria` e `RegistroDeAuditoria` (registram as ações importantes) e `AcessoNegadoException`.
 
 ## Explicação Breve das Regras de Negócio
 
 O sistema não é apenas um cadastro; ele protege ativamente as seguintes regras de negócio:
 * **Controle de Vagas:** Um assento não pode ser vendido se já estiver ocupado (dispara `AssentoIndisponivelException`).
 * **Estoque:** Um pedido não é pago se algum produto não tiver estoque suficiente (dispara `EstoqueInsuficienteException`); o estoque é abatido na mesma transação que grava a venda.
-* **Validação de Sessão:** O sistema impede a venda de ingressos para sessões que não estejam disponíveis (dispara `IllegalStateException`).
+* **Assento só ocupa ao pagar:** colocar o ingresso no pedido não reserva a poltrona; ela só fica ocupada depois do pagamento aprovado. Se o pedido já tem a poltrona, ou se ela foi comprada por outra pessoa antes, o sistema recusa (`AssentoIndisponivelException`); se a sessão não tem mais nenhuma poltrona livre, dispara `IngressosEsgotadosException`.
+* **Validação de Sessão:** O sistema impede a venda de ingressos para sessões canceladas ou que já começaram (dispara `IllegalStateException`), inclusive na hora de pagar, caso a sessão comece enquanto o ingresso está no carrinho. Ao cadastrar ou alterar uma sessão, a data precisa estar no futuro.
+* **Edição de sessões:** o administrador só altera ou cancela uma sessão agendada que ainda não vendeu ingresso.
+* **Carrinho:** o cliente pode trocar a quantidade de um produto já adicionado; o sistema confere o estoque antes de aumentar.
+* **Acesso do administrador:** as operações de cadastro e de pedidos conferem no banco se o usuário é administrador (`ControleDeAcesso`, dispara `AcessoNegadoException`) e ficam registradas na auditoria.
 * **Imutabilidade do Pedido:** Um pedido vazio não pode ser pago, e um pedido que já foi finalizado não pode ter seu status alterado livremente ou ser cancelado diretamente de forma indevida.
 * **Regras de Pagamento:** Cartões com `YearMonth` de validade expirada são automaticamente recusados, e transações Pix fora do prazo expiram, bloqueando a transição de status (dispara `PagamentoException`).
 
@@ -160,20 +167,68 @@ Abaixo, detalhamos onde cada conceito exigido foi aplicado no nosso sistema:
 | Classes e objetos Java | Classes coerentes e instanciação de objetos do domínio | Instanciação de `Filme`, `Cliente`, `Produto` e `Ingresso` nas operações do sistema. |
 | Atributos de classe Java | Estado relevante armazenado nos objetos | Atributos como `titulo` e `duracaoMinutos` em `Filme`, e `estoque` em `Produto`. |
 | Métodos de classe Java | Comportamentos associados às classes corretas | Métodos como `calcularTotal()` no `Pedido` e `calcularSubtotal()` no `ItemPedido`. |
-| Construtores em Java | Inicialização obrigatória e criação de objetos válidos | Construtores de `Filme`, `Usuario` e `Sessao` exigem a passagem dos dados obrigatórios na sua criação. |
+| Construtores em Java | Inicialização obrigatória e criação de objetos válidos | Os construtores de `Filme`, `Usuario` e `Sessao` recebem todos os dados na criação (não existe construtor vazio). `Pedido` e `ItemPedido` também validam os dados e lançam `IllegalArgumentException` quando o cliente, o produto ou a quantidade são inválidos. |
 | Palavra-chave `this` | Referência inequívoca ao objeto atual | Utilizado amplamente nos construtores (ex: `this.nome = nome`) para diferenciar atributos de parâmetros. |
 | Modificadores Java | Visibilidade adequada de classes, atributos e métodos | Atributos declarados como `private` (e `final` para imutabilidade no `ItemPedido`), expondo apenas `public getters`. |
 | Encapsulamento em Java | Proteção do estado e alterações por métodos controlados | O atributo `status` de `Pedido` não pode ser alterado externamente: só muda pelos métodos `confirmarPagamento()`, `marcarComoPronto()`, `retirar()` e `cancelar()`, que validam a transição antes de alterar. |
-| Pacotes Java / API | Organização do código por responsabilidade | Código rigorosamente dividido em `modelo`, `servico`, `excecoes` e `interfacegrafica`. |
+| Pacotes Java / API | Organização do código por responsabilidade | Código dividido em `modelo`, `servico`, `excecoes`, `persistencia` e `interfacegrafica`. |
 | Herança em Java | Especialização coerente de um conceito geral | `Cliente` e `Administrador` estendem `Usuario`; `PagamentoPix` e `PagamentoCartao` estendem `Pagamento`. |
 | Polimorfismo em Java | Uso do tipo geral para manipular objetos diferentes | No `VendaService.finalizarPedido`, o pagamento criado pela forma escolhida é tratado pelo tipo geral `Pagamento` e chama `processarPagamento()`, sem saber se é `PagamentoPix` (valida o prazo de 10 minutos) ou `PagamentoCartao` (valida a validade do cartão). |
 | Palavra-chave `super` | Reaproveitamento da inicialização ou comportamento da superclasse | Construtores de `Cliente`, `Administrador` e `PagamentoCartao` chamam `super(...)` para aproveitar os dados da classe mãe. |
 | Abstração em Java | Representação de um conceito geral que não deve ser instanciado diretamente | As classes `Usuario` e `Pagamento` foram declaradas como `abstract`. |
 | Interfaces em Java | Contrato com implementações substituíveis | `PoliticaPreco` (implementada por `PrecoInteira`, `PrecoMeia` e `PrecoCortesia`), `FormaPagamento` (implementada por `FormaPagamentoPix` e `FormaPagamentoCartao`) e as interfaces de repositório (`FilmeRepositorio`, `PedidoRepositorio` etc.), implementadas pelas classes `...Jdbc`. |
 | Enum em Java | Conjunto fechado de valores válidos | Uso extensivo para segurança de estado: `TipoIngresso`, `StatusPedido`, `Pagamento.Status`, `StatusSessao`, `TipoAssento`, `ClassificacaoIndicativa` e `CategoriaProduto`. |
-| Tratamento de exceções em Java | Lançamento e tratamento adequado de erros, incluindo exceções próprias do domínio | Exceções próprias: `AssentoIndisponivelException`, `IngressosEsgotadosException`, `EstoqueInsuficienteException`, `PagamentoException`, `TransicaoStatusInvalidaException` e `PersistenciaException`. São lançadas pelo domínio e pelos serviços e capturadas e exibidas via `try-catch` nas telas. |
-| Interface gráfica com Swing | Interface mínima funcional para entrada, execução de operações e apresentação de resultados | Telas completas (`AstraFrame`, `TelaCliente`, `TelaAdmin`) usando `JFrame`, `JComboBox`, `JTextField` e exibições amigáveis via `JOptionPane`. |
+| Tratamento de exceções em Java | Lançamento e tratamento adequado de erros, incluindo exceções próprias do domínio | Exceções próprias: `AssentoIndisponivelException`, `IngressosEsgotadosException`, `EstoqueInsuficienteException`, `PagamentoException`, `TransicaoStatusInvalidaException`, `AcessoNegadoException` e `PersistenciaException`. São lançadas pelo domínio e pelos serviços e capturadas e exibidas via `try-catch` nas telas. |
+| Interface gráfica com Swing | Interface mínima funcional para entrada, execução de operações e apresentação de resultados | Telas completas (`AstraFrame`, `TelaCliente`, `TelaAdmin`) usando `JFrame`, `JTabbedPane` (abas), `JTable`, `JComboBox`, `JTextField`, `JSpinner` e exibições amigáveis via `JOptionPane`. |
 | Data e hora em Java | Uso da API `java.time` | Uso de `LocalDateTime` para a data/hora da `Sessao` e do `Pedido`, e `YearMonth` para a validade do `PagamentoCartao`. |
+
+## Princípios de Projeto (SOLID, Clean Architecture, Clean Code e JavaDoc)
+
+Abaixo, onde cada princípio aparece no código do Astra.
+
+### SOLID
+
+* **S, Responsabilidade Única:** cada classe tem um motivo só para mudar. `Pedido` cuida do estado do pedido e das transições de status; `VendaService`, de montar o pedido e pagar; `SessaoService`, de cadastrar, alterar e cancelar sessões; `ContaService`, de entrar no sistema e criar contas; `PedidoService`, de acompanhar os pedidos; `ControleDeAcesso`, de conferir se o usuário é administrador; `TrilhaDeAuditoria`, de registrar as ações. Os repositórios só leem e gravam no banco.
+* **O, Aberto/Fechado:** o preço do ingresso e a forma de pagamento podem ganhar novos comportamentos por classes novas, sem alterar o código que já funciona. Um novo tipo de ingresso é uma classe que implementa `PoliticaPreco` (como `PrecoInteira`, `PrecoMeia` e `PrecoCortesia`); `Ingresso` e `VendaService` continuam iguais e só o `enum Ingresso.TipoIngresso` ganha uma constante. Uma nova forma de pagamento é uma classe que implementa `FormaPagamento` mais uma linha na lista criada no `Main`; `VendaService` não muda. Ainda é preciso acrescentar a constante no enum correspondente e o valor no `CHECK` do `schema.sql`.
+* **L, Substituição de Liskov:** as subclasses entram no lugar da superclasse sem quebrar quem as usa. Em `VendaService.finalizarPedido`, o pagamento é tratado pelo tipo `Pagamento` e chama `processarPagamento()` sem saber se é `PagamentoPix` ou `PagamentoCartao`. O mesmo vale para `PrecoInteira`, `PrecoMeia` e `PrecoCortesia` no lugar de `PoliticaPreco`, e para `Cliente` e `Administrador` no lugar de `Usuario`.
+* **I, Segregação de Interfaces:** a `TelaCliente` recebe só a interface `CatalogoCliente`, que tem apenas o que o cliente faz (listar sessões e produtos, montar o pedido e pagar). Ela não enxerga, por exemplo, o cadastro de produtos, que é do administrador. Cada repositório também é uma interface pequena, para um assunto só (`FilmeRepositorio`, `PedidoRepositorio` etc.).
+* **D, Inversão de Dependência:** os serviços recebem os repositórios e as formas de pagamento pelo construtor, como interfaces (`FilmeRepositorio`, `FormaPagamento` etc.), e não conhecem o JDBC. O `Main` é o único lugar que cria as classes concretas (`...Jdbc`, `FormaPagamentoPix`, `AtendimentoCliente`) e liga tudo.
+
+### Clean Architecture
+
+As dependências apontam sempre para dentro: quem está nas camadas externas conhece as internas, nunca o contrário.
+
+```
+interfacegrafica  ->  servico (casos de uso)  ->  modelo (regras do domínio) + excecoes
+                           |
+                           v
+          interfaces de repositório  <-  persistencia (classes ...Jdbc, SQLite)
+```
+
+* **Entidades e regras do domínio** (`modelo`, `excecoes`): `Pedido`, `Sessao`, `Ingresso`, `Pagamento` e as demais classes não conhecem banco nem tela.
+* **Casos de uso** (`servico`): `VendaService`, `SessaoService`, `ContaService` e os demais coordenam as regras e dependem das interfaces de repositório, nunca de uma classe `...Jdbc`.
+* **Banco de dados** (`persistencia`): as classes `...Jdbc` implementam as interfaces de repositório e são o único lugar com SQL. Trocar o SQLite por outro banco só exigiria novas implementações dessas interfaces.
+* **Interface gráfica** (`interfacegrafica`): as telas usam os serviços e **nenhuma classe de `persistencia`**; a `TelaCliente` conhece só `CatalogoCliente`. Em sentido contrário, `modelo`, `servico` e `excecoes` não importam nenhuma classe da interface gráfica, então o núcleo compila sem as telas e os testes de `src/teste` rodam no console, sem abrir janela.
+* **Composição:** o `Main` cria os repositórios, os serviços e a janela, e injeta cada dependência. Hoje as interfaces de repositório ficam no mesmo pacote (`persistencia`) das classes `...Jdbc`; a regra de dependência é mantida porque os serviços usam apenas as interfaces.
+
+### Clean Code
+
+* **Nomes que dizem a intenção:** `validarPodeSerPago()`, `estaVazio()`, `assentoEstaDisponivel()`, `possuiVagas()`, `calcularSubtotal()`, `exigirAdministrador()`.
+* **Métodos curtos, com uma tarefa:** as regras do `modelo` são pequenas (por exemplo, em `Pedido`, `confirmarPagamento()`, `marcarComoPronto()`, `retirar()` e `cancelar()` só validam a transição e trocam o status).
+* **Uma única fonte para cada regra:** "pedido vazio não pode ser pago" está só em `Pedido.validarPodeSerPago()`, e as verificações de tamanho de campo compartilhadas pelos serviços ficam em `Validacao`.
+* **Erros com nome e mensagem clara,** em vez de códigos de retorno: exceções próprias do domínio (`AssentoIndisponivelException`, `EstoqueInsuficienteException` etc.), com mensagens que a tela mostra ao usuário.
+* **Valores com nome:** constantes como `Sessao.PRECO_BASE_PADRAO` e as iterações do hash de senha em `CriptografiaSenha`, em vez de números soltos pelo código.
+* **Testes automáticos** em `src/teste` cobrem venda, pagamento, banco, contas, administração e segurança, e documentação JavaDoc nas classes públicas.
+
+### JavaDoc
+
+As classes, os construtores e os métodos públicos têm comentários `/** ... */` com `@param`, `@return` e `@throws`. Para gerar a documentação em HTML, na raiz do projeto:
+
+```bash
+javadoc -encoding UTF-8 -charset UTF-8 -d docs/javadoc -sourcepath src -subpackages astra -cp "lib/*"
+```
+
+No Windows, o comando é o mesmo (as aspas em `"lib/*"` são obrigatórias).
 
 ## Diagramas
 

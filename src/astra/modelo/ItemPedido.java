@@ -72,17 +72,29 @@ public class ItemPedido {
     }
 
     // GETTERS
-    /** @return o produto deste item */
+    /**
+     * Retorna o produto deste item.
+     *
+     * @return o produto deste item
+     */
     public Produto getProduto() {
         return this.produto;
     }
 
-    /** @return o número de unidades do item */
+    /**
+     * Retorna a quantidade de unidades do item.
+     *
+     * @return o número de unidades do item
+     */
     public int getQuantidade() {
         return this.quantidade;
     }
 
-    /** @return o preço de cada unidade, fixado no momento da compra */
+    /**
+     * Retorna o preço de cada unidade do item.
+     *
+     * @return o preço de cada unidade, fixado no momento da compra
+     */
     public double getPrecoUnitario() {
         return this.precoUnitario;
     }
