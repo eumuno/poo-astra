@@ -5,7 +5,6 @@ Bem-vindo ao repositório do **Grupo 7** para a disciplina de Programação Orie
 Nosso projeto é o Astra: um sistema de gerenciamento e compra online para um cinema. O cliente pode consultar filmes e sessões disponíveis, selecionar assentos, comprar ingressos e adquirir produtos da bomboniere. O pagamento é realizado pelo sistema e os produtos e ingressos são retirados presencialmente no cinema. Funcionários administradores cadastram filmes, produtos da bomboniere e sessões de exibição. Todos os dados ficam salvos em um banco SQLite.
 
 * [HTML da apresentação.](https://eumuno.github.io/poo-astra/apresentacao/)
-* [HTML do JavaDoc](https://eumuno.github.io/poo-astra/docs/javadoc/)
 
 ---
 
